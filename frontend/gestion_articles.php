@@ -13,9 +13,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $date_achat = $_POST['date_achat'];
         $marque = $_POST['marque'];
         $model = $_POST['model'];
-        $stock = $_POST['stock'];
 
-        $stmt = $conn->prepare("INSERT INTO articles (type, fournisseur, prix, quantite, date_achat, marque, model, stock) VALUES (:type, :fournisseur, :prix, :quantite, :date_achat, :marque, :model, :stock)");
+        $stmt = $conn->prepare("INSERT INTO articles (type, fournisseur, prix, quantite, date_achat, marque, model) VALUES (:type, :fournisseur, :prix, :quantite, :date_achat, :marque, :model)");
         $stmt->bindParam(':type', $type);
         $stmt->bindParam(':fournisseur', $fournisseur);
         $stmt->bindParam(':prix', $prix);
@@ -23,7 +22,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(':date_achat', $date_achat);
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
-        $stmt->bindParam(':stock', $stock);
         $stmt->execute();
 
         header("Location: gestion_articles.php");
@@ -46,9 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $date_achat = $_POST['date_achat'];
         $marque = $_POST['marque'];
         $model = $_POST['model'];
-        $stock = $_POST['stock'];
 
-        $stmt = $conn->prepare("UPDATE articles SET type = :type, fournisseur = :fournisseur, prix = :prix, quantite = :quantite, date_achat = :date_achat, marque = :marque, model = :model, stock = :stock WHERE id = :id");
+        $stmt = $conn->prepare("UPDATE articles SET type = :type, fournisseur = :fournisseur, prix = :prix, quantite = :quantite, date_achat = :date_achat, marque = :marque, model = :model WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':type', $type);
         $stmt->bindParam(':fournisseur', $fournisseur);
@@ -57,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(':date_achat', $date_achat);
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
-        $stmt->bindParam(':stock', $stock);
         $stmt->execute();
 
         header("Location: gestion_articles.php");
@@ -65,12 +61,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Récupérer la liste des articles
-$stmt = $conn->prepare("SELECT * FROM articles");
+$stmt = $conn->prepare("SELECT articles.*, fournisseurs.nom AS fournisseur_nom FROM articles JOIN fournisseurs ON articles.fournisseur = fournisseurs.id");
 $stmt->execute();
 $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupérer la liste des fournisseurs
 $stmt = $conn->prepare("SELECT id, nom FROM fournisseurs");
 $stmt->execute();
 $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -83,13 +77,13 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <thead>
         <tr>
             <th>Type</th>
-            <th>Fournisseur</th>
+            <th>Marque</th>
+            <th>Modèle</th>
             <th>Prix</th>
             <th>Quantité</th>
             <th>Date d'Achat</th>
-            <th>Marque</th>
-            <th>Modèle</th>
-            <th>Stock</th>
+            <th>Fournisseur</th>
+            <th>Total Prix</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -97,15 +91,15 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($articles as $article): ?>
         <tr>
             <td><?= htmlspecialchars($article['type']) ?></td>
-            <td><?= htmlspecialchars($article['fournisseur']) ?></td>
-            <td><?= htmlspecialchars($article['prix']) ?></td>
-            <td><?= htmlspecialchars($article['quantite']) ?></td>
-            <td><?= htmlspecialchars($article['date_achat']) ?></td>
             <td><?= htmlspecialchars($article['marque']) ?></td>
             <td><?= htmlspecialchars($article['model']) ?></td>
-            <td><?= htmlspecialchars($article['stock']) ?></td>
+            <td><?= htmlspecialchars($article['prix']) ?> €</td>
+            <td><?= htmlspecialchars($article['quantite']) ?></td>
+            <td><?= htmlspecialchars($article['date_achat']) ?></td>
+            <td><?= htmlspecialchars($article['fournisseur_nom']) ?></td>
+            <td><?= htmlspecialchars($article['prix'] * $article['quantite']) ?> €</td>
             <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-fournisseur="<?= $article['fournisseur'] ?>" data-prix="<?= $article['prix'] ?>" data-quantite="<?= $article['quantite'] ?>" data-date_achat="<?= $article['date_achat'] ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-stock="<?= $article['stock'] ?>">Modifier</button>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-fournisseur="<?= $article['fournisseur'] ?>" data-prix="<?= $article['prix'] ?>" data-quantite="<?= $article['quantite'] ?>" data-date_achat="<?= $article['date_achat'] ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>">Modifier</button>
                 <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
                     <input type="hidden" name="id" value="<?= $article['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
@@ -133,25 +127,25 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="type">Type:</label>
                         <select id="type" name="type" class="form-control" required>
-                            <option value="munitions">Munitions</option>
-                            <option value="equipements">Équipements</option>
+                            <option value="munition">Munition</option>
+                            <option value="equipement">Équipement</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="fournisseur">Fournisseur:</label>
                         <select id="fournisseur" name="fournisseur" class="form-control" required>
-                            <?php if (empty($fournisseurs)): ?>
-                                <option value="">Aucun fournisseur enregistré.</option>
-                            <?php else: ?>
+                            <?php if (count($fournisseurs) > 0): ?>
                                 <?php foreach ($fournisseurs as $fournisseur): ?>
                                     <option value="<?= $fournisseur['id'] ?>"><?= htmlspecialchars($fournisseur['nom']) ?></option>
                                 <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="">Aucun fournisseurs enregistrés.</option>
                             <?php endif; ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="prix">Prix:</label>
-                        <input type="number" id="prix" name="prix" class="form-control" required>
+                        <input type="number" id="prix" name="prix" class="form-control" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label for="quantite">Quantité:</label>
@@ -168,13 +162,6 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="model">Modèle:</label>
                         <input type="text" id="model" name="model" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="stock">Stock:</label>
-                        <select id="stock" name="stock" class="form-control" required>
-                            <option value="achete">Acheté</option>
-                            <option value="reglementaire">Réglementaire</option>
-                        </select>
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -199,25 +186,25 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="edit-type">Type:</label>
                         <select id="edit-type" name="type" class="form-control" required>
-                            <option value="munitions">Munitions</option>
-                            <option value="equipements">Équipements</option>
+                            <option value="munition">Munition</option>
+                            <option value="equipement">Équipement</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="edit-fournisseur">Fournisseur:</label>
                         <select id="edit-fournisseur" name="fournisseur" class="form-control" required>
-                            <?php if (empty($fournisseurs)): ?>
-                                <option value="">Aucun fournisseur enregistré.</option>
-                            <?php else: ?>
+                            <?php if (count($fournisseurs) > 0): ?>
                                 <?php foreach ($fournisseurs as $fournisseur): ?>
                                     <option value="<?= $fournisseur['id'] ?>"><?= htmlspecialchars($fournisseur['nom']) ?></option>
                                 <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="">Aucun fournisseurs enregistrés.</option>
                             <?php endif; ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="edit-prix">Prix:</label>
-                        <input type="number" id="edit-prix" name="prix" class="form-control" required>
+                        <input type="number" id="edit-prix" name="prix" class="form-control" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label for="edit-quantite">Quantité:</label>
@@ -234,13 +221,6 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="edit-model">Modèle:</label>
                         <input type="text" id="edit-model" name="model" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-stock">Stock:</label>
-                        <select id="edit-stock" name="stock" class="form-control" required>
-                            <option value="achete">Acheté</option>
-                            <option value="reglementaire">Réglementaire</option>
-                        </select>
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>
@@ -274,7 +254,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var date_achat = btn.getAttribute('data-date_achat');
             var marque = btn.getAttribute('data-marque');
             var model = btn.getAttribute('data-model');
-            var stock = btn.getAttribute('data-stock');
 
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-type').value = type;
@@ -284,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-date_achat').value = date_achat;
             document.getElementById('edit-marque').value = marque;
             document.getElementById('edit-model').value = model;
-            document.getElementById('edit-stock').value = stock;
 
             editModal.show();
         }

@@ -30,9 +30,11 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Calculer le total en stock des articles
 $total_stock_articles = 0;
 $total_value_articles = 0;
+$total_price_articles = 0; // Pour stocker la somme de tous les total prix
 foreach ($articles as $article) {
     $total_stock_articles += $article['quantite'];
     $total_value_articles += $article['prix'] * $article['quantite'];
+    $total_price_articles += $article['prix'] * $article['quantite'];
 }
 
 // Récupérer les années disponibles pour les statistiques
@@ -102,7 +104,7 @@ if ($type_stock == 'reglementaire') {
 
 // Calculer la valeur totale du stock y compris les séances de tir
 $average_price_per_munition = $total_stock_articles > 0 ? $total_value_articles / $total_stock_articles : 0;
-$total_value = $average_price_per_munition * $total_stock;
+$total_value = $total_price_articles;
 ?>
 
 <?php include 'header.php'; ?>
@@ -128,6 +130,7 @@ $total_value = $average_price_per_munition * $total_stock;
             <th>Quantité</th>
             <th>Date d'Achat</th>
             <th>Fournisseur</th>
+            <th>Total Prix</th>
         </tr>
     </thead>
     <tbody>
@@ -140,6 +143,7 @@ $total_value = $average_price_per_munition * $total_stock;
             <td><?= htmlspecialchars($article['quantite']) ?></td>
             <td><?= htmlspecialchars($article['date_achat']) ?></td>
             <td><?= htmlspecialchars($article['fournisseur']) ?></td>
+            <td><?= htmlspecialchars($article['prix'] * $article['quantite']) ?> €</td>
         </tr>
         <?php endforeach; ?>
     </tbody>
