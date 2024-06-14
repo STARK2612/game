@@ -99,53 +99,65 @@ $_SESSION['total_armes'] = $total_armes;
 
 <?php include 'header.php'; ?>
 
+<style>
+.center-table {
+    margin-left: 2%; /* Diminue la marge de gauche */
+    width: 96%; /* Largeur ajustée */
+    overflow-x: auto;
+}
+.red-block {
+    background-color: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+.green-block {
+    background-color: #d4edda;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+</style>
+
 <h2>Gestion des Armes</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Marque</th>
-            <th>Modèle</th>
-            <th>Prix</th>
-            <th>Calibre</th>
-            <th>Fournisseur</th>
-            <th>État à l'achat</th>
-            <th>Date d'achat</th>
-            <th>Numéro de série</th>
-            <th>État à la revente</th>
-            <th>Date de revente</th>
-            <th>Prix de revente</th>
-            <th>Date de réparation</th>
-            <th>Prix de réparation</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($armes as $arme): ?>
-        <tr>
-            <td><?= htmlspecialchars($arme['marque']) ?></td>
-            <td><?= htmlspecialchars($arme['model']) ?></td>
-            <td><?= htmlspecialchars($arme['prix']) ?> €</td>
-            <td><?= htmlspecialchars($arme['calibre']) ?></td>
-            <td><?= htmlspecialchars($arme['fournisseur_nom']) ?></td>
-            <td><?= htmlspecialchars($arme['etat_achat']) ?></td>
-            <td><?= !empty($arme['date_achat']) ? date('d/m/Y', strtotime($arme['date_achat'])) : '' ?></td>
-            <td><?= htmlspecialchars($arme['num_serie']) ?></td>
-            <td><?= htmlspecialchars($arme['etat_revente']) ?></td>
-            <td><?= !empty($arme['date_revente']) ? date('d/m/Y', strtotime($arme['date_revente'])) : '' ?></td>
-            <td><?= htmlspecialchars($arme['prix_revente']) ?> €</td>
-            <td><?= !empty($arme['date_reparation']) ? date('d/m/Y', strtotime($arme['date_reparation'])) : '' ?></td>
-            <td><?= htmlspecialchars($arme['prix_reparation']) ?> €</td>
-            <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
-                <form method="post" action="gestion_armes.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
-                    <input type="hidden" name="id" value="<?= $arme['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="center-table">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Marque</th>
+                <th>Modèle</th>
+                <th>Prix</th>
+                <th>Calibre</th>
+                <th>Fournisseur</th>
+                <th>État à l'achat</th>
+                <th>Date d'achat</th>
+                <th>Numéro de série</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($armes as $arme): ?>
+            <tr>
+                <td><?= htmlspecialchars($arme['marque']) ?></td>
+                <td><?= htmlspecialchars($arme['model']) ?></td>
+                <td><?= htmlspecialchars($arme['prix']) ?> €</td>
+                <td><?= htmlspecialchars($arme['calibre']) ?></td>
+                <td><?= htmlspecialchars($arme['fournisseur_nom']) ?></td>
+                <td><?= htmlspecialchars($arme['etat_achat']) ?></td>
+                <td><?= !empty($arme['date_achat']) ? date('d/m/Y', strtotime($arme['date_achat'])) : '' ?></td>
+                <td><?= htmlspecialchars($arme['num_serie']) ?></td>
+                <td>
+                    <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
+                    <form method="post" action="gestion_armes.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
+                        <input type="hidden" name="id" value="<?= $arme['id'] ?>">
+                        <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
 
 <button id="add-btn" class="btn btn-primary">Ajouter une Arme</button>
 
@@ -205,28 +217,32 @@ $_SESSION['total_armes'] = $total_armes;
                         <label for="num_serie">Numéro de série:</label>
                         <input type="text" id="num_serie" name="num_serie" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label for="date_revente">Date de revente:</label>
-                        <input type="date" id="date_revente" name="date_revente" class="form-control">
+                    <div class="green-block">
+                        <div class="form-group">
+                            <label for="etat_revente">État pour la vente:</label>
+                            <select id="etat_revente" name="etat_revente" class="form-control">
+                                <option value="neuf">Neuf</option>
+                                <option value="occasion">Occasion</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date_revente">Date de revente:</label>
+                            <input type="date" id="date_revente" name="date_revente" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="prix_revente">Prix de revente:</label>
+                            <input type="number" id="prix_revente" name="prix_revente" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="prix_revente">Prix de revente:</label>
-                        <input type="number" id="prix_revente" name="prix_revente" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="etat_revente">État pour la vente:</label>
-                        <select id="etat_revente" name="etat_revente" class="form-control">
-                            <option value="neuf">Neuf</option>
-                            <option value="occasion">Occasion</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="date_reparation">Date de réparation:</label>
-                        <input type="date" id="date_reparation" name="date_reparation" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="prix_reparation">Prix de réparation:</label>
-                        <input type="number" id="prix_reparation" name="prix_reparation" class="form-control">
+                    <div class="red-block">
+                        <div class="form-group">
+                            <label for="date_reparation">Date de réparation:</label>
+                            <input type="date" id="date_reparation" name="date_reparation" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="prix_reparation">Prix de réparation:</label>
+                            <input type="number" id="prix_reparation" name="prix_reparation" class="form-control">
+                        </div>
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -289,28 +305,32 @@ $_SESSION['total_armes'] = $total_armes;
                         <label for="edit-num_serie">Numéro de série:</label>
                         <input type="text" id="edit-num_serie" name="num_serie" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-date_revente">Date de revente:</label>
-                        <input type="date" id="edit-date_revente" name="date_revente" class="form-control">
+                    <div class="green-block">
+                        <div class="form-group">
+                            <label for="edit-etat_revente">État pour la vente:</label>
+                            <select id="edit-etat_revente" name="etat_revente" class="form-control">
+                                <option value="neuf">Neuf</option>
+                                <option value="occasion">Occasion</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-date_revente">Date de revente:</label>
+                            <input type="date" id="edit-date_revente" name="date_revente" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-prix_revente">Prix de revente:</label>
+                            <input type="number" id="edit-prix_revente" name="prix_revente" class="form-control">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-prix_revente">Prix de revente:</label>
-                        <input type="number" id="edit-prix_revente" name="prix_revente" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-etat_revente">État pour la vente:</label>
-                        <select id="edit-etat_revente" name="etat_revente" class="form-control">
-                            <option value="neuf">Neuf</option>
-                            <option value="occasion">Occasion</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-date_reparation">Date de réparation:</label>
-                        <input type="date" id="edit-date_reparation" name="date_reparation" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-prix_reparation">Prix de réparation:</label>
-                        <input type="number" id="edit-prix_reparation" name="prix_reparation" class="form-control">
+                    <div class="red-block">
+                        <div class="form-group">
+                            <label for="edit-date_reparation">Date de réparation:</label>
+                            <input type="date" id="edit-date_reparation" name="date_reparation" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-prix_reparation">Prix de réparation:</label>
+                            <input type="number" id="edit-prix_reparation" name="prix_reparation" class="form-control">
+                        </div>
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>
@@ -365,6 +385,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-etat_revente').value = etat_revente;
             document.getElementById('edit-date_reparation').value = date_reparation;
             document.getElementById('edit-prix_reparation').value = prix_reparation;
+
+            if (etat_revente || date_revente || prix_revente) {
+                document.querySelector('.green-block').style.display = 'block';
+            } else {
+                document.querySelector('.green-block').style.display = 'none';
+            }
+
+            if (date_reparation || prix_reparation) {
+                document.querySelector('.red-block').style.display = 'block';
+            } else {
+                document.querySelector('.red-block').style.display = 'none';
+            }
 
             editModal.show();
         }
