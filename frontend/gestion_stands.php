@@ -31,6 +31,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
+        // Supprimer les enregistrements dépendants dans la table seance_tir
+        $stmt = $conn->prepare("DELETE FROM seance_tir WHERE stand_de_tir = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        // Ensuite, supprimer l'enregistrement dans la table stands
         $stmt = $conn->prepare("DELETE FROM stands WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -72,7 +78,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php include 'header.php'; ?>
 
-<h2>Gestion des Stands</h2>
+<h2>Gestion des Stands de Tir</h2>
 <table class="table table-bordered">
     <thead>
         <tr>
@@ -83,7 +89,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <th>Pays</th>
             <th>Téléphone</th>
             <th>Email</th>
-            <th>Prix par Invite</th>
+            <th>Prix par Invité</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -100,7 +106,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($stand['prix_par_invite']) ?></td>
             <td>
                 <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
-                <form method="post" action="gestion_stands.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand ?');">
+                <form method="post" action="gestion_stands.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
                     <input type="hidden" name="id" value="<?= $stand['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                 </form>
@@ -153,8 +159,8 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="email" id="email" name="email" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="prix_par_invite">Prix par Invite:</label>
-                        <input type="number" id="prix_par_invite" name="prix_par_invite" class="form-control" required>
+                        <label for="prix_par_invite">Prix par Invité:</label>
+                        <input type="number" id="prix_par_invite" name="prix_par_invite" class="form-control" step="0.01" required>
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -205,8 +211,8 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="email" id="edit-email" name="email" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-prix_par_invite">Prix par Invite:</label>
-                        <input type="number" id="edit-prix_par_invite" name="prix_par_invite" class="form-control" required>
+                        <label for="edit-prix_par_invite">Prix par Invité:</label>
+                        <input type="number" id="edit-prix_par_invite" name="prix_par_invite" class="form-control" step="0.01" required>
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>

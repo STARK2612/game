@@ -8,29 +8,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['add'])) {
         $arme = $_POST['arme'];
         $nombre_munitions = $_POST['nombre_munitions'];
-        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
         $stock = $_POST['stock'];
         $stand_de_tir = $_POST['stand_de_tir'];
         $date_seance = $_POST['date_seance'];
-        $heure_seance = $_POST['heure_seance'];
-        $commentaire = $_POST['commentaire'];
+        $heure_debut = $_POST['heure_debut'];
+        $heure_fin = $_POST['heure_fin'];
+        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
         $nom_invite = $_POST['nom_invite'];
-        $prenom_invite = $_POST['prenom_invite'];
-        $date_naissance_invite = $_POST['date_naissance_invite'];
+        $commentaire = $_POST['commentaire'];
 
-        $stmt = $conn->prepare("INSERT INTO seance_tir (arme, nombre_munitions, nombre_munitions_tirees, stock, stand_de_tir, date_seance, heure_seance, commentaire, nom_invite, prenom_invite, date_naissance_invite) VALUES (:arme, :nombre_munitions, :nombre_munitions_tirees, :stock, :stand_de_tir, :date_seance, :heure_seance, :commentaire, :nom_invite, :prenom_invite, :date_naissance_invite)");
+        // Ajouter la séance à la table des séances de tir
+        $stmt = $conn->prepare("INSERT INTO seance_tir (arme, nombre_munitions, stock, stand_de_tir, date_seance, heure_debut, heure_fin, nombre_munitions_tirees, nom_invite, commentaire) VALUES (:arme, :nombre_munitions, :stock, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nombre_munitions_tirees, :nom_invite, :commentaire)");
         $stmt->bindParam(':arme', $arme);
         $stmt->bindParam(':nombre_munitions', $nombre_munitions);
-        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
         $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':stand_de_tir', $stand_de_tir);
         $stmt->bindParam(':date_seance', $date_seance);
-        $stmt->bindParam(':heure_seance', $heure_seance);
-        $stmt->bindParam(':commentaire', $commentaire);
+        $stmt->bindParam(':heure_debut', $heure_debut);
+        $stmt->bindParam(':heure_fin', $heure_fin);
+        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
         $stmt->bindParam(':nom_invite', $nom_invite);
-        $stmt->bindParam(':prenom_invite', $prenom_invite);
-        $stmt->bindParam(':date_naissance_invite', $date_naissance_invite);
+        $stmt->bindParam(':commentaire', $commentaire);
         $stmt->execute();
+        $seance_id = $conn->lastInsertId();
+
+        // Mettre à jour le stock en fonction du type de stock
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("SELECT * FROM stock_reglementaire WHERE article_id = :article_id");
+            $stmt->bindParam(':article_id', $arme);
+            $stmt->execute();
+            $stock_reg = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($stock_reg) {
+                $nouvelle_quantite_cartouches = $stock_reg['quantite_cartouches'] - $nombre_munitions_tirees;
+                $stmt = $conn->prepare("UPDATE stock_reglementaire SET quantite_cartouches = :quantite_cartouches WHERE article_id = :article_id");
+                $stmt->bindParam(':quantite_cartouches', $nouvelle_quantite_cartouches);
+                $stmt->bindParam(':article_id', $arme);
+                $stmt->execute();
+            }
+        } else {
+            $stmt = $conn->prepare("SELECT * FROM stock_achete WHERE article_id = :article_id");
+            $stmt->bindParam(':article_id', $arme);
+            $stmt->execute();
+            $stock_ach = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($stock_ach) {
+                $nouvelle_quantite_cartouches = $stock_ach['quantite_cartouches'] - $nombre_munitions_tirees;
+                $stmt = $conn->prepare("UPDATE stock_achete SET quantite_cartouches = :quantite_cartouches WHERE article_id = :article_id");
+                $stmt->bindParam(':quantite_cartouches', $nouvelle_quantite_cartouches);
+                $stmt->bindParam(':article_id', $arme);
+                $stmt->execute();
+            }
+        }
 
         header("Location: gestion_seances.php");
         exit;
@@ -47,29 +76,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $id = $_POST['id'];
         $arme = $_POST['arme'];
         $nombre_munitions = $_POST['nombre_munitions'];
-        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
         $stock = $_POST['stock'];
         $stand_de_tir = $_POST['stand_de_tir'];
         $date_seance = $_POST['date_seance'];
-        $heure_seance = $_POST['heure_seance'];
-        $commentaire = $_POST['commentaire'];
+        $heure_debut = $_POST['heure_debut'];
+        $heure_fin = $_POST['heure_fin'];
+        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
         $nom_invite = $_POST['nom_invite'];
-        $prenom_invite = $_POST['prenom_invite'];
-        $date_naissance_invite = $_POST['date_naissance_invite'];
+        $commentaire = $_POST['commentaire'];
 
-        $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, nombre_munitions = :nombre_munitions, nombre_munitions_tirees = :nombre_munitions_tirees, stock = :stock, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_seance = :heure_seance, commentaire = :commentaire, nom_invite = :nom_invite, prenom_invite = :prenom_invite, date_naissance_invite = :date_naissance_invite WHERE id = :id");
+        $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, nombre_munitions = :nombre_munitions, stock = :stock, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nombre_munitions_tirees = :nombre_munitions_tirees, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':arme', $arme);
         $stmt->bindParam(':nombre_munitions', $nombre_munitions);
-        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
         $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':stand_de_tir', $stand_de_tir);
         $stmt->bindParam(':date_seance', $date_seance);
-        $stmt->bindParam(':heure_seance', $heure_seance);
-        $stmt->bindParam(':commentaire', $commentaire);
+        $stmt->bindParam(':heure_debut', $heure_debut);
+        $stmt->bindParam(':heure_fin', $heure_fin);
+        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
         $stmt->bindParam(':nom_invite', $nom_invite);
-        $stmt->bindParam(':prenom_invite', $prenom_invite);
-        $stmt->bindParam(':date_naissance_invite', $date_naissance_invite);
+        $stmt->bindParam(':commentaire', $commentaire);
         $stmt->execute();
 
         header("Location: gestion_seances.php");
@@ -106,48 +133,40 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php include 'header.php'; ?>
 
-<style>
-.table td {
-    word-wrap: break-word;
-    max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
-    white-space: pre-wrap; /* Cette propriété assure que les espaces sont respectés et le texte s'affiche correctement */
-}
-</style>
-
 <h2>Gestion des Séances de Tir</h2>
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>n°ordre</th>
+            <th>Date</th>
+            <th>Heure de début</th>
+            <th>Heure de fin</th>
             <th>Arme</th>
             <th>Nombre de Munitions</th>
             <th>Nombre de Munitions Tirées</th>
             <th>Stock</th>
             <th>Stand de Tir</th>
-            <th>Date de la Séance</th>
-            <th>Heure de la Séance</th>
-            <th>Commentaire</th>
             <th>Nom de l'Invité</th>
-            <th>Prénom de l'Invité</th>
-            <th>Date de Naissance de l'Invité</th>
+            <th>Commentaire</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($seances as $seance): ?>
         <tr>
+            <td><?= htmlspecialchars('SEA-' . $seance['id']) ?></td>
+            <td><?= htmlspecialchars(date('d/m/Y', strtotime($seance['date_seance']))) ?></td>
+            <td><?= htmlspecialchars(date('H:i', strtotime($seance['heure_debut']))) ?></td>
+            <td><?= htmlspecialchars(date('H:i', strtotime($seance['heure_fin']))) ?></td>
             <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
             <td><?= htmlspecialchars($seance['nombre_munitions']) ?></td>
             <td><?= htmlspecialchars($seance['nombre_munitions_tirees']) ?></td>
             <td><?= htmlspecialchars($seance['stock']) ?></td>
             <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
-            <td><?= htmlspecialchars($seance['date_seance']) ?></td>
-            <td><?= htmlspecialchars($seance['heure_seance']) ?></td>
-            <td><?= htmlspecialchars($seance['commentaire']) ?></td>
             <td><?= htmlspecialchars($seance['nom_invite']) ?></td>
-            <td><?= htmlspecialchars($seance['prenom_invite']) ?></td>
-            <td><?= htmlspecialchars($seance['date_naissance_invite']) ?></td>
+            <td><?= htmlspecialchars($seance['commentaire']) ?></td>
             <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-nombre_munitions="<?= $seance['nombre_munitions'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stock="<?= $seance['stock'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_seance="<?= $seance['heure_seance'] ?>" data-commentaire="<?= $seance['commentaire'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-prenom_invite="<?= $seance['prenom_invite'] ?>" data-date_naissance_invite="<?= $seance['date_naissance_invite'] ?>">Modifier</button>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-nombre_munitions="<?= $seance['nombre_munitions'] ?>" data-stock="<?= $seance['stock'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
                 <form method="post" action="gestion_seances.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette séance ?');">
                     <input type="hidden" name="id" value="<?= $seance['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
@@ -173,11 +192,30 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="modal-body">
                 <form method="post" action="gestion_seances.php">
                     <div class="form-group">
+                        <label for="date_seance">Date:</label>
+                        <input type="date" id="date_seance" name="date_seance" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="heure_debut">Heure de début:</label>
+                        <input type="time" id="heure_debut" name="heure_debut" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="heure_fin">Heure de fin:</label>
+                        <input type="time" id="heure_fin" name="heure_fin" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label for="arme">Arme:</label>
                         <select id="arme" name="arme" class="form-control" required>
                             <?php foreach ($armes as $arme): ?>
                                 <option value="<?= $arme['id'] ?>"><?= htmlspecialchars($arme['marque'] . ' ' . $arme['model']) ?></option>
                             <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Stock:</label>
+                        <select id="stock" name="stock" class="form-control" required>
+                            <option value="achete">Acheté</option>
+                            <option value="reglementaire">Réglementaire</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -189,13 +227,6 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="number" id="nombre_munitions_tirees" name="nombre_munitions_tirees" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="stock">Stock:</label>
-                        <select id="stock" name="stock" class="form-control" required>
-                            <option value="achete">Acheté</option>
-                            <option value="reglementaire">Réglementaire</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="stand_de_tir">Stand de Tir:</label>
                         <select id="stand_de_tir" name="stand_de_tir" class="form-control" required>
                             <?php foreach ($stands as $stand): ?>
@@ -204,28 +235,12 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="date_seance">Date de la Séance:</label>
-                        <input type="date" id="date_seance" name="date_seance" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="heure_seance">Heure de la Séance:</label>
-                        <input type="time" id="heure_seance" name="heure_seance" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="commentaire">Commentaire:</label>
-                        <textarea id="commentaire" name="commentaire" class="form-control"></textarea>
-                    </div>
-                    <div class="form-group">
                         <label for="nom_invite">Nom de l'Invité:</label>
                         <input type="text" id="nom_invite" name="nom_invite" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="prenom_invite">Prénom de l'Invité:</label>
-                        <input type="text" id="prenom_invite" name="prenom_invite" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="date_naissance_invite">Date de Naissance de l'Invité:</label>
-                        <input type="date" id="date_naissance_invite" name="date_naissance_invite" class="form-control" required>
+                        <label for="commentaire">Commentaire:</label>
+                        <textarea id="commentaire" name="commentaire" class="form-control"></textarea>
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -248,11 +263,30 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <form method="post" action="gestion_seances.php">
                     <input type="hidden" id="edit-id" name="id">
                     <div class="form-group">
+                        <label for="edit-date_seance">Date:</label>
+                        <input type="date" id="edit-date_seance" name="date_seance" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-heure_debut">Heure de début:</label>
+                        <input type="time" id="edit-heure_debut" name="heure_debut" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-heure_fin">Heure de fin:</label>
+                        <input type="time" id="edit-heure_fin" name="heure_fin" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label for="edit-arme">Arme:</label>
                         <select id="edit-arme" name="arme" class="form-control" required>
                             <?php foreach ($armes as $arme): ?>
                                 <option value="<?= $arme['id'] ?>"><?= htmlspecialchars($arme['marque'] . ' ' . $arme['model']) ?></option>
                             <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-stock">Stock:</label>
+                        <select id="edit-stock" name="stock" class="form-control" required>
+                            <option value="achete">Acheté</option>
+                            <option value="reglementaire">Réglementaire</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -264,13 +298,6 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="number" id="edit-nombre_munitions_tirees" name="nombre_munitions_tirees" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-stock">Stock:</label>
-                        <select id="edit-stock" name="stock" class="form-control" required>
-                            <option value="achete">Acheté</option>
-                            <option value="reglementaire">Réglementaire</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="edit-stand_de_tir">Stand de Tir:</label>
                         <select id="edit-stand_de_tir" name="stand_de_tir" class="form-control" required>
                             <?php foreach ($stands as $stand): ?>
@@ -279,28 +306,12 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-date_seance">Date de la Séance:</label>
-                        <input type="date" id="edit-date_seance" name="date_seance" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-heure_seance">Heure de la Séance:</label>
-                        <input type="time" id="edit-heure_seance" name="heure_seance" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-commentaire">Commentaire:</label>
-                        <textarea id="edit-commentaire" name="commentaire" class="form-control"></textarea>
-                    </div>
-                    <div class="form-group">
                         <label for="edit-nom_invite">Nom de l'Invité:</label>
                         <input type="text" id="edit-nom_invite" name="nom_invite" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-prenom_invite">Prénom de l'Invité:</label>
-                        <input type="text" id="edit-prenom_invite" name="prenom_invite" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-date_naissance_invite">Date de Naissance de l'Invité:</label>
-                        <input type="date" id="edit-date_naissance_invite" name="date_naissance_invite" class="form-control" required>
+                        <label for="edit-commentaire">Commentaire:</label>
+                        <textarea id="edit-commentaire" name="commentaire" class="form-control"></textarea>
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>
@@ -329,28 +340,26 @@ document.addEventListener('DOMContentLoaded', function() {
             var id = btn.getAttribute('data-id');
             var arme = btn.getAttribute('data-arme');
             var nombre_munitions = btn.getAttribute('data-nombre_munitions');
-            var nombre_munitions_tirees = btn.getAttribute('data-nombre_munitions_tirees');
             var stock = btn.getAttribute('data-stock');
             var stand_de_tir = btn.getAttribute('data-stand_de_tir');
             var date_seance = btn.getAttribute('data-date_seance');
-            var heure_seance = btn.getAttribute('data-heure_seance');
-            var commentaire = btn.getAttribute('data-commentaire');
+            var heure_debut = btn.getAttribute('data-heure_debut');
+            var heure_fin = btn.getAttribute('data-heure_fin');
+            var nombre_munitions_tirees = btn.getAttribute('data-nombre_munitions_tirees');
             var nom_invite = btn.getAttribute('data-nom_invite');
-            var prenom_invite = btn.getAttribute('data-prenom_invite');
-            var date_naissance_invite = btn.getAttribute('data-date_naissance_invite');
+            var commentaire = btn.getAttribute('data-commentaire');
 
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-arme').value = arme;
             document.getElementById('edit-nombre_munitions').value = nombre_munitions;
-            document.getElementById('edit-nombre_munitions_tirees').value = nombre_munitions_tirees;
             document.getElementById('edit-stock').value = stock;
             document.getElementById('edit-stand_de_tir').value = stand_de_tir;
             document.getElementById('edit-date_seance').value = date_seance;
-            document.getElementById('edit-heure_seance').value = heure_seance;
-            document.getElementById('edit-commentaire').value = commentaire;
+            document.getElementById('edit-heure_debut').value = heure_debut;
+            document.getElementById('edit-heure_fin').value = heure_fin;
+            document.getElementById('edit-nombre_munitions_tirees').value = nombre_munitions_tirees;
             document.getElementById('edit-nom_invite').value = nom_invite;
-            document.getElementById('edit-prenom_invite').value = prenom_invite;
-            document.getElementById('edit-date_naissance_invite').value = date_naissance_invite;
+            document.getElementById('edit-commentaire').value = commentaire;
 
             editModal.show();
         }

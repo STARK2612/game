@@ -14,16 +14,16 @@ check_inactivity();
     <header class="bg-dark text-white p-3">
         <div class="container">
             <h1 class="h3">Gestionnaire d'armes</h1>
-            <p>Bienvenue, <?= htmlspecialchars($_SESSION['user_name']) ?></p>
+            <p>Bienvenue, <?= $_SESSION['user_name'] ?></p>
             <nav>
                 <ul class="nav">
                     <li class="nav-item"><a class="nav-link text-white" href="dashboard.php">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="gestion_armes.php">Armes</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_articles.php">Articles</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="gestion_achats.php">Achats</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="gestion_armes.php">Armes</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="gestion_seances.php">Séances de Tir</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_fournisseurs.php">Fournisseurs</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_stands.php">Stands</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="gestion_seances.php">Séances de Tir</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="gestion_stock.php">Stock</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion.php">Gestion</a></li>
                     <?php if ($_SESSION['user_role'] == 'administrateur'): ?>
                         <li class="nav-item"><a class="nav-link text-white" href="gestion_utilisateurs.php">Utilisateurs</a></li>

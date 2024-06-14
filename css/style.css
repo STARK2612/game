@@ -87,3 +87,37 @@ header nav ul li a {
     max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
     white-space: pre-wrap; /* Cette propriété assure que les espaces sont respectés et le texte s'affiche correctement */
 }
+
+.card-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 300px; /* largeur souhaitée */
+    height: 300px; /* hauteur souhaitée */
+    background-color: orange;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.card-title {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+form {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    text-align: center;
+}
+
+.table td {
+    word-wrap: break-word;
+    max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
+    white-space: pre-wrap; /* Cette propriété assure que les espaces sont respectés et le texte s'affiche correctement */
+}

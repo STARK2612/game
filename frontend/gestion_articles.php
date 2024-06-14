@@ -7,21 +7,34 @@ check_inactivity();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['add'])) {
         $type = $_POST['type'];
-        $fournisseur = $_POST['fournisseur'];
-        $prix = $_POST['prix'];
-        $quantite = $_POST['quantite'];
-        $date_achat = $_POST['date_achat'];
+        $prix_unite = $_POST['prix_unite'];
         $marque = $_POST['marque'];
         $model = $_POST['model'];
+        $cartouches_par_boite = ($type == 'munition') ? $_POST['cartouches_par_boite'] : null;
 
-        $stmt = $conn->prepare("INSERT INTO articles (type, fournisseur, prix, quantite, date_achat, marque, model) VALUES (:type, :fournisseur, :prix, :quantite, :date_achat, :marque, :model)");
+        // Récupérer le suffixe actuel
+        $stmt = $conn->prepare("SELECT * FROM reference_suffix WHERE id = 1");
+        $stmt->execute();
+        $suffix = $stmt->fetch(PDO::FETCH_ASSOC);
+        $prefix = $suffix['prefix'];
+        $current_number = $suffix['current_number'];
+
+        // Générer le numéro de référence
+        $reference = $prefix . $current_number;
+
+        // Mettre à jour le numéro actuel
+        $new_number = $current_number + 1;
+        $stmt = $conn->prepare("UPDATE reference_suffix SET current_number = :current_number WHERE id = 1");
+        $stmt->bindParam(':current_number', $new_number);
+        $stmt->execute();
+
+        $stmt = $conn->prepare("INSERT INTO articles (type, prix_unite, marque, model, reference, cartouches_par_boite) VALUES (:type, :prix_unite, :marque, :model, :reference, :cartouches_par_boite)");
         $stmt->bindParam(':type', $type);
-        $stmt->bindParam(':fournisseur', $fournisseur);
-        $stmt->bindParam(':prix', $prix);
-        $stmt->bindParam(':quantite', $quantite);
-        $stmt->bindParam(':date_achat', $date_achat);
+        $stmt->bindParam(':prix_unite', $prix_unite);
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
+        $stmt->bindParam(':reference', $reference);
+        $stmt->bindParam(':cartouches_par_boite', $cartouches_par_boite);
         $stmt->execute();
 
         header("Location: gestion_articles.php");
@@ -29,6 +42,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
+        // Supprimer d'abord les enregistrements associés dans la table achats
+        $stmt = $conn->prepare("DELETE FROM achats WHERE article_id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        // Supprimer l'article
         $stmt = $conn->prepare("DELETE FROM articles WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -38,22 +57,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['update'])) {
         $id = $_POST['id'];
         $type = $_POST['type'];
-        $fournisseur = $_POST['fournisseur'];
-        $prix = $_POST['prix'];
-        $quantite = $_POST['quantite'];
-        $date_achat = $_POST['date_achat'];
+        $prix_unite = $_POST['prix_unite'];
         $marque = $_POST['marque'];
         $model = $_POST['model'];
+        $cartouches_par_boite = ($type == 'munition') ? $_POST['cartouches_par_boite'] : null;
 
-        $stmt = $conn->prepare("UPDATE articles SET type = :type, fournisseur = :fournisseur, prix = :prix, quantite = :quantite, date_achat = :date_achat, marque = :marque, model = :model WHERE id = :id");
+        $stmt = $conn->prepare("UPDATE articles SET type = :type, prix_unite = :prix_unite, marque = :marque, model = :model, cartouches_par_boite = :cartouches_par_boite WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':type', $type);
-        $stmt->bindParam(':fournisseur', $fournisseur);
-        $stmt->bindParam(':prix', $prix);
-        $stmt->bindParam(':quantite', $quantite);
-        $stmt->bindParam(':date_achat', $date_achat);
+        $stmt->bindParam(':prix_unite', $prix_unite);
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
+        $stmt->bindParam(':cartouches_par_boite', $cartouches_par_boite);
         $stmt->execute();
 
         header("Location: gestion_articles.php");
@@ -61,13 +76,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-$stmt = $conn->prepare("SELECT articles.*, fournisseurs.nom AS fournisseur_nom FROM articles JOIN fournisseurs ON articles.fournisseur = fournisseurs.id");
+// Calcul du stock total pour chaque article
+$stmt = $conn->prepare("
+    SELECT articles.*, 
+           COALESCE(SUM(achats.quantite), 0) AS total_boites,
+           COALESCE(SUM(achats.quantite * IFNULL(articles.cartouches_par_boite, 1)), 0) - COALESCE(SUM(seance_tir.nombre_munitions_tirees), 0) AS stock 
+    FROM articles 
+    LEFT JOIN achats ON articles.id = achats.article_id 
+    LEFT JOIN seance_tir ON articles.id = seance_tir.arme 
+    GROUP BY articles.id
+");
 $stmt->execute();
 $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $conn->prepare("SELECT id, nom FROM fournisseurs");
-$stmt->execute();
-$fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Calcul de la valeur totale du stock des munitions et du stock total des cartouches
+$valeur_totale_munitions = 0;
+$stock_total_cartouches = 0;
+foreach ($articles as $article) {
+    if ($article['type'] == 'munition') {
+        $valeur_totale_munitions += ($article['prix_unite'] ?? 0) * ($article['total_boites'] ?? 0);
+        $stock_total_cartouches += ($article['total_boites'] ?? 0) * ($article['cartouches_par_boite'] ?? 1);
+    }
+}
+
+// Stocker les valeurs calculées dans la session pour les utiliser dans le dashboard
+$_SESSION['valeur_totale_munitions'] = $valeur_totale_munitions;
+$_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
 ?>
 
 <?php include 'header.php'; ?>
@@ -76,30 +110,38 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Numéro de Référence</th>
             <th>Type</th>
             <th>Marque</th>
             <th>Modèle</th>
-            <th>Prix</th>
-            <th>Quantité</th>
-            <th>Date d'Achat</th>
-            <th>Fournisseur</th>
-            <th>Total Prix</th>
+            <th>Prix Unité</th>
+            <th>Valeur Stock</th>
+            <th>Stock</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($articles as $article): ?>
         <tr>
+            <td><?= htmlspecialchars($article['reference'] ?? '') ?></td>
             <td><?= htmlspecialchars($article['type']) ?></td>
             <td><?= htmlspecialchars($article['marque']) ?></td>
             <td><?= htmlspecialchars($article['model']) ?></td>
-            <td><?= htmlspecialchars($article['prix']) ?> €</td>
-            <td><?= htmlspecialchars($article['quantite']) ?></td>
-            <td><?= htmlspecialchars($article['date_achat']) ?></td>
-            <td><?= htmlspecialchars($article['fournisseur_nom']) ?></td>
-            <td><?= htmlspecialchars($article['prix'] * $article['quantite']) ?> €</td>
+            <td><?= htmlspecialchars($article['prix_unite'] ?? '') ?> €</td>
+            <td><?= htmlspecialchars(($article['prix_unite'] ?? 0) * ($article['total_boites'] ?? 0)) ?> €</td>
             <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-fournisseur="<?= $article['fournisseur'] ?>" data-prix="<?= $article['prix'] ?>" data-quantite="<?= $article['quantite'] ?>" data-date_achat="<?= $article['date_achat'] ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>">Modifier</button>
+                <?php if ($article['type'] == 'munition' && !empty($article['cartouches_par_boite'])): ?>
+                    <?php 
+                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                    $boites = $article['total_boites'];
+                    ?>
+                    <?= htmlspecialchars($boites) ?> boîte(s) ou <?= htmlspecialchars($total_cartouches) ?> cartouche(s)
+                <?php else: ?>
+                    <?= htmlspecialchars($article['total_boites']) ?>
+                <?php endif; ?>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
                 <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
                     <input type="hidden" name="id" value="<?= $article['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
@@ -127,33 +169,15 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="type">Type:</label>
                         <select id="type" name="type" class="form-control" required>
+                            <option value="" disabled selected>Sélectionner un type d'article</option>
                             <option value="munition">Munition</option>
-                            <option value="equipement">Équipement</option>
+                            <option value="consommable">Consommable</option>
+                            <option value="fixe">Fixe</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="fournisseur">Fournisseur:</label>
-                        <select id="fournisseur" name="fournisseur" class="form-control" required>
-                            <?php if (count($fournisseurs) > 0): ?>
-                                <?php foreach ($fournisseurs as $fournisseur): ?>
-                                    <option value="<?= $fournisseur['id'] ?>"><?= htmlspecialchars($fournisseur['nom']) ?></option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="">Aucun fournisseurs enregistrés.</option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="prix">Prix:</label>
-                        <input type="number" id="prix" name="prix" class="form-control" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="quantite">Quantité:</label>
-                        <input type="number" id="quantite" name="quantite" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="date_achat">Date d'Achat:</label>
-                        <input type="date" id="date_achat" name="date_achat" class="form-control" required>
+                    <div class="form-group" id="cartouches_par_boite_group" style="display: none;">
+                        <label for="cartouches_par_boite">Nombre de cartouches par boîte:</label>
+                        <input type="number" id="cartouches_par_boite" name="cartouches_par_boite" class="form-control">
                     </div>
                     <div class="form-group">
                         <label for="marque">Marque:</label>
@@ -162,6 +186,10 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="model">Modèle:</label>
                         <input type="text" id="model" name="model" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prix_unite">Prix Unité:</label>
+                        <input type="number" id="prix_unite" name="prix_unite" class="form-control" step="0.01" required>
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -186,33 +214,15 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="edit-type">Type:</label>
                         <select id="edit-type" name="type" class="form-control" required>
+                            <option value="" disabled selected>Sélectionner un type d'article</option>
                             <option value="munition">Munition</option>
-                            <option value="equipement">Équipement</option>
+                            <option value="consommable">Consommable</option>
+                            <option value="fixe">Fixe</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-fournisseur">Fournisseur:</label>
-                        <select id="edit-fournisseur" name="fournisseur" class="form-control" required>
-                            <?php if (count($fournisseurs) > 0): ?>
-                                <?php foreach ($fournisseurs as $fournisseur): ?>
-                                    <option value="<?= $fournisseur['id'] ?>"><?= htmlspecialchars($fournisseur['nom']) ?></option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <option value="">Aucun fournisseurs enregistrés.</option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-prix">Prix:</label>
-                        <input type="number" id="edit-prix" name="prix" class="form-control" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-quantite">Quantité:</label>
-                        <input type="number" id="edit-quantite" name="quantite" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-date_achat">Date d'Achat:</label>
-                        <input type="date" id="edit-date_achat" name="date_achat" class="form-control" required>
+                    <div class="form-group" id="edit-cartouches_par_boite_group" style="display: none;">
+                        <label for="edit-cartouches_par_boite">Nombre de cartouches par boîte:</label>
+                        <input type="number" id="edit-cartouches_par_boite" name="cartouches_par_boite" class="form-control">
                     </div>
                     <div class="form-group">
                         <label for="edit-marque">Marque:</label>
@@ -221,6 +231,10 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="edit-model">Modèle:</label>
                         <input type="text" id="edit-model" name="model" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-prix_unite">Prix Unité:</label>
+                        <input type="number" id="edit-prix_unite" name="prix_unite" class="form-control" step="0.01" required>
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>
@@ -248,23 +262,41 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.onclick = function() {
             var id = btn.getAttribute('data-id');
             var type = btn.getAttribute('data-type');
-            var fournisseur = btn.getAttribute('data-fournisseur');
-            var prix = btn.getAttribute('data-prix');
-            var quantite = btn.getAttribute('data-quantite');
-            var date_achat = btn.getAttribute('data-date_achat');
+            var prix_unite = btn.getAttribute('data-prix_unite') || '';
             var marque = btn.getAttribute('data-marque');
             var model = btn.getAttribute('data-model');
+            var cartouches_par_boite = btn.getAttribute('data-cartouches_par_boite') || '';
 
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-type').value = type;
-            document.getElementById('edit-fournisseur').value = fournisseur;
-            document.getElementById('edit-prix').value = prix;
-            document.getElementById('edit-quantite').value = quantite;
-            document.getElementById('edit-date_achat').value = date_achat;
+            document.getElementById('edit-prix_unite').value = prix_unite;
             document.getElementById('edit-marque').value = marque;
             document.getElementById('edit-model').value = model;
+            document.getElementById('edit-cartouches_par_boite').value = cartouches_par_boite;
+
+            if (type === 'munition') {
+                document.getElementById('edit-cartouches_par_boite_group').style.display = 'block';
+            } else {
+                document.getElementById('edit-cartouches_par_boite_group').style.display = 'none';
+            }
 
             editModal.show();
+        }
+    });
+
+    document.getElementById('type').addEventListener('change', function() {
+        if (this.value === 'munition') {
+            document.getElementById('cartouches_par_boite_group').style.display = 'block';
+        } else {
+            document.getElementById('cartouches_par_boite_group').style.display = 'none';
+        }
+    });
+
+    document.getElementById('edit-type').addEventListener('change', function() {
+        if (this.value === 'munition') {
+            document.getElementById('edit-cartouches_par_boite_group').style.display = 'block';
+        } else {
+            document.getElementById('edit-cartouches_par_boite_group').style.display = 'none';
         }
     });
 });

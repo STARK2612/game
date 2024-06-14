@@ -8,16 +8,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['add'])) {
         $marque = $_POST['marque'];
         $model = $_POST['model'];
+        $prix = $_POST['prix'];
         $calibre = $_POST['calibre'];
-        $etat = $_POST['etat'];
+        $fournisseur = $_POST['fournisseur'];
+        $etat_achat = $_POST['etat_achat'];
         $date_achat = $_POST['date_achat'];
+        $num_serie = $_POST['num_serie'];
+        $date_revente = !empty($_POST['date_revente']) ? $_POST['date_revente'] : null;
+        $prix_revente = !empty($_POST['prix_revente']) ? $_POST['prix_revente'] : null;
+        $etat_revente = !empty($_POST['etat_revente']) ? $_POST['etat_revente'] : null;
+        $date_reparation = !empty($_POST['date_reparation']) ? $_POST['date_reparation'] : null;
+        $prix_reparation = !empty($_POST['prix_reparation']) ? $_POST['prix_reparation'] : null;
 
-        $stmt = $conn->prepare("INSERT INTO armes (marque, model, calibre, etat, date_achat) VALUES (:marque, :model, :calibre, :etat, :date_achat)");
+        $stmt = $conn->prepare("INSERT INTO armes (marque, model, prix, calibre, fournisseur, etat_achat, date_achat, num_serie, date_revente, prix_revente, etat_revente, date_reparation, prix_reparation) VALUES (:marque, :model, :prix, :calibre, :fournisseur, :etat_achat, :date_achat, :num_serie, :date_revente, :prix_revente, :etat_revente, :date_reparation, :prix_reparation)");
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
+        $stmt->bindParam(':prix', $prix);
         $stmt->bindParam(':calibre', $calibre);
-        $stmt->bindParam(':etat', $etat);
+        $stmt->bindParam(':fournisseur', $fournisseur);
+        $stmt->bindParam(':etat_achat', $etat_achat);
         $stmt->bindParam(':date_achat', $date_achat);
+        $stmt->bindParam(':num_serie', $num_serie);
+        $stmt->bindParam(':date_revente', $date_revente);
+        $stmt->bindParam(':prix_revente', $prix_revente);
+        $stmt->bindParam(':etat_revente', $etat_revente);
+        $stmt->bindParam(':date_reparation', $date_reparation);
+        $stmt->bindParam(':prix_reparation', $prix_reparation);
         $stmt->execute();
 
         header("Location: gestion_armes.php");
@@ -35,17 +51,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $id = $_POST['id'];
         $marque = $_POST['marque'];
         $model = $_POST['model'];
+        $prix = $_POST['prix'];
         $calibre = $_POST['calibre'];
-        $etat = $_POST['etat'];
+        $fournisseur = $_POST['fournisseur'];
+        $etat_achat = $_POST['etat_achat'];
         $date_achat = $_POST['date_achat'];
+        $num_serie = $_POST['num_serie'];
+        $date_revente = !empty($_POST['date_revente']) ? $_POST['date_revente'] : null;
+        $prix_revente = !empty($_POST['prix_revente']) ? $_POST['prix_revente'] : null;
+        $etat_revente = !empty($_POST['etat_revente']) ? $_POST['etat_revente'] : null;
+        $date_reparation = !empty($_POST['date_reparation']) ? $_POST['date_reparation'] : null;
+        $prix_reparation = !empty($_POST['prix_reparation']) ? $_POST['prix_reparation'] : null;
 
-        $stmt = $conn->prepare("UPDATE armes SET marque = :marque, model = :model, calibre = :calibre, etat = :etat, date_achat = :date_achat WHERE id = :id");
+        $stmt = $conn->prepare("UPDATE armes SET marque = :marque, model = :model, prix = :prix, calibre = :calibre, fournisseur = :fournisseur, etat_achat = :etat_achat, date_achat = :date_achat, num_serie = :num_serie, date_revente = :date_revente, prix_revente = :prix_revente, etat_revente = :etat_revente, date_reparation = :date_reparation, prix_reparation = :prix_reparation WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':marque', $marque);
         $stmt->bindParam(':model', $model);
+        $stmt->bindParam(':prix', $prix);
         $stmt->bindParam(':calibre', $calibre);
-        $stmt->bindParam(':etat', $etat);
+        $stmt->bindParam(':fournisseur', $fournisseur);
+        $stmt->bindParam(':etat_achat', $etat_achat);
         $stmt->bindParam(':date_achat', $date_achat);
+        $stmt->bindParam(':num_serie', $num_serie);
+        $stmt->bindParam(':date_revente', $date_revente);
+        $stmt->bindParam(':prix_revente', $prix_revente);
+        $stmt->bindParam(':etat_revente', $etat_revente);
+        $stmt->bindParam(':date_reparation', $date_reparation);
+        $stmt->bindParam(':prix_reparation', $prix_reparation);
         $stmt->execute();
 
         header("Location: gestion_armes.php");
@@ -53,9 +85,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-$stmt = $conn->prepare("SELECT * FROM armes");
+// Récupérer toutes les armes
+$stmt = $conn->prepare("SELECT armes.*, fournisseurs.nom AS fournisseur_nom FROM armes LEFT JOIN fournisseurs ON armes.fournisseur = fournisseurs.id");
 $stmt->execute();
 $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculer le total des armes
+$total_armes = count($armes);
+
+// Stocker le total des armes dans la session pour l'utiliser dans le dashboard
+$_SESSION['total_armes'] = $total_armes;
 ?>
 
 <?php include 'header.php'; ?>
@@ -66,9 +105,17 @@ $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <tr>
             <th>Marque</th>
             <th>Modèle</th>
+            <th>Prix</th>
             <th>Calibre</th>
-            <th>État</th>
-            <th>Date d'Achat</th>
+            <th>Fournisseur</th>
+            <th>État à l'achat</th>
+            <th>Date d'achat</th>
+            <th>Numéro de série</th>
+            <th>État à la revente</th>
+            <th>Date de revente</th>
+            <th>Prix de revente</th>
+            <th>Date de réparation</th>
+            <th>Prix de réparation</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -77,11 +124,19 @@ $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <tr>
             <td><?= htmlspecialchars($arme['marque']) ?></td>
             <td><?= htmlspecialchars($arme['model']) ?></td>
+            <td><?= htmlspecialchars($arme['prix']) ?> €</td>
             <td><?= htmlspecialchars($arme['calibre']) ?></td>
-            <td><?= htmlspecialchars($arme['etat']) ?></td>
-            <td><?= htmlspecialchars($arme['date_achat']) ?></td>
+            <td><?= htmlspecialchars($arme['fournisseur_nom']) ?></td>
+            <td><?= htmlspecialchars($arme['etat_achat']) ?></td>
+            <td><?= !empty($arme['date_achat']) ? date('d/m/Y', strtotime($arme['date_achat'])) : '' ?></td>
+            <td><?= htmlspecialchars($arme['num_serie']) ?></td>
+            <td><?= htmlspecialchars($arme['etat_revente']) ?></td>
+            <td><?= !empty($arme['date_revente']) ? date('d/m/Y', strtotime($arme['date_revente'])) : '' ?></td>
+            <td><?= htmlspecialchars($arme['prix_revente']) ?> €</td>
+            <td><?= !empty($arme['date_reparation']) ? date('d/m/Y', strtotime($arme['date_reparation'])) : '' ?></td>
+            <td><?= htmlspecialchars($arme['prix_reparation']) ?> €</td>
             <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-etat="<?= $arme['etat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>">Modifier</button>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
                 <form method="post" action="gestion_armes.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
                     <input type="hidden" name="id" value="<?= $arme['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
@@ -115,19 +170,63 @@ $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="text" id="model" name="model" class="form-control" required>
                     </div>
                     <div class="form-group">
+                        <label for="prix">Prix:</label>
+                        <input type="number" id="prix" name="prix" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label for="calibre">Calibre:</label>
                         <input type="text" id="calibre" name="calibre" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="etat">État:</label>
-                        <select id="etat" name="etat" class="form-control" required>
-                            <option value="neuf">Neuf</option>
-                            <option value="occasion">D'occasion</option>
+                        <label for="fournisseur">Fournisseur:</label>
+                        <select id="fournisseur" name="fournisseur" class="form-control" required>
+                            <?php
+                            $stmt = $conn->prepare("SELECT id, nom FROM fournisseurs");
+                            $stmt->execute();
+                            $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($fournisseurs as $fournisseur) {
+                                echo "<option value=\"" . htmlspecialchars($fournisseur['id']) . "\">" . htmlspecialchars($fournisseur['nom']) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="date_achat">Date d'Achat:</label>
+                        <label for="etat_achat">État à l'achat:</label>
+                        <select id="etat_achat" name="etat_achat" class="form-control" required>
+                            <option value="neuf">Neuf</option>
+                            <option value="occasion">Occasion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_achat">Date d'achat:</label>
                         <input type="date" id="date_achat" name="date_achat" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="num_serie">Numéro de série:</label>
+                        <input type="text" id="num_serie" name="num_serie" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_revente">Date de revente:</label>
+                        <input type="date" id="date_revente" name="date_revente" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="prix_revente">Prix de revente:</label>
+                        <input type="number" id="prix_revente" name="prix_revente" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="etat_revente">État pour la vente:</label>
+                        <select id="etat_revente" name="etat_revente" class="form-control">
+                            <option value="neuf">Neuf</option>
+                            <option value="occasion">Occasion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_reparation">Date de réparation:</label>
+                        <input type="date" id="date_reparation" name="date_reparation" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="prix_reparation">Prix de réparation:</label>
+                        <input type="number" id="prix_reparation" name="prix_reparation" class="form-control">
                     </div>
                     <button type="submit" name="add" class="btn btn-primary">Ajouter</button>
                 </form>
@@ -158,19 +257,60 @@ $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="text" id="edit-model" name="model" class="form-control" required>
                     </div>
                     <div class="form-group">
+                        <label for="edit-prix">Prix:</label>
+                        <input type="number" id="edit-prix" name="prix" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label for="edit-calibre">Calibre:</label>
                         <input type="text" id="edit-calibre" name="calibre" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-etat">État:</label>
-                        <select id="edit-etat" name="etat" class="form-control" required>
-                            <option value="neuf">Neuf</option>
-                            <option value="occasion">D'occasion</option>
+                        <label for="edit-fournisseur">Fournisseur:</label>
+                        <select id="edit-fournisseur" name="fournisseur" class="form-control" required>
+                            <?php
+                            foreach ($fournisseurs as $fournisseur) {
+                                echo "<option value=\"" . htmlspecialchars($fournisseur['id']) . "\">" . htmlspecialchars($fournisseur['nom']) . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-date_achat">Date d'Achat:</label>
+                        <label for="edit-etat_achat">État à l'achat:</label>
+                        <select id="edit-etat_achat" name="etat_achat" class="form-control" required>
+                            <option value="neuf">Neuf</option>
+                            <option value="occasion">Occasion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date_achat">Date d'achat:</label>
                         <input type="date" id="edit-date_achat" name="date_achat" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-num_serie">Numéro de série:</label>
+                        <input type="text" id="edit-num_serie" name="num_serie" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date_revente">Date de revente:</label>
+                        <input type="date" id="edit-date_revente" name="date_revente" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-prix_revente">Prix de revente:</label>
+                        <input type="number" id="edit-prix_revente" name="prix_revente" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-etat_revente">État pour la vente:</label>
+                        <select id="edit-etat_revente" name="etat_revente" class="form-control">
+                            <option value="neuf">Neuf</option>
+                            <option value="occasion">Occasion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date_reparation">Date de réparation:</label>
+                        <input type="date" id="edit-date_reparation" name="date_reparation" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-prix_reparation">Prix de réparation:</label>
+                        <input type="number" id="edit-prix_reparation" name="prix_reparation" class="form-control">
                     </div>
                     <button type="submit" name="update" class="btn btn-primary">Modifier</button>
                 </form>
@@ -199,16 +339,32 @@ document.addEventListener('DOMContentLoaded', function() {
             var id = btn.getAttribute('data-id');
             var marque = btn.getAttribute('data-marque');
             var model = btn.getAttribute('data-model');
+            var prix = btn.getAttribute('data-prix');
             var calibre = btn.getAttribute('data-calibre');
-            var etat = btn.getAttribute('data-etat');
+            var fournisseur = btn.getAttribute('data-fournisseur');
+            var etat_achat = btn.getAttribute('data-etat_achat');
             var date_achat = btn.getAttribute('data-date_achat');
+            var num_serie = btn.getAttribute('data-num_serie');
+            var date_revente = btn.getAttribute('data-date_revente') || '';
+            var prix_revente = btn.getAttribute('data-prix_revente') || '';
+            var etat_revente = btn.getAttribute('data-etat_revente') || '';
+            var date_reparation = btn.getAttribute('data-date_reparation') || '';
+            var prix_reparation = btn.getAttribute('data-prix_reparation') || '';
 
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-marque').value = marque;
             document.getElementById('edit-model').value = model;
+            document.getElementById('edit-prix').value = prix;
             document.getElementById('edit-calibre').value = calibre;
-            document.getElementById('edit-etat').value = etat;
+            document.getElementById('edit-fournisseur').value = fournisseur;
+            document.getElementById('edit-etat_achat').value = etat_achat;
             document.getElementById('edit-date_achat').value = date_achat;
+            document.getElementById('edit-num_serie').value = num_serie;
+            document.getElementById('edit-date_revente').value = date_revente;
+            document.getElementById('edit-prix_revente').value = prix_revente;
+            document.getElementById('edit-etat_revente').value = etat_revente;
+            document.getElementById('edit-date_reparation').value = date_reparation;
+            document.getElementById('edit-prix_reparation').value = prix_reparation;
 
             editModal.show();
         }
