@@ -89,19 +89,21 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calcul de la valeur totale du stock des munitions et du stock total des cartouches
+// Calculer la valeur totale des munitions en stock et le stock total des cartouches
 $valeur_totale_munitions = 0;
 $stock_total_cartouches = 0;
+
 foreach ($articles as $article) {
     if ($article['type'] == 'munition') {
-        $valeur_totale_munitions += ($article['prix_unite'] ?? 0) * ($article['total_boites'] ?? 0);
-        $stock_total_cartouches += ($article['total_boites'] ?? 0) * ($article['cartouches_par_boite'] ?? 1);
+        $valeur_totale_munitions += $article['prix_unite'] * $article['total_boites'];
+        $stock_total_cartouches += $article['total_boites'] * $article['cartouches_par_boite'];
     }
 }
 
 // Stocker les valeurs calculées dans la session pour les utiliser dans le dashboard
 $_SESSION['valeur_totale_munitions'] = $valeur_totale_munitions;
 $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
+
 ?>
 
 <?php include 'header.php'; ?>
