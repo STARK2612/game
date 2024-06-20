@@ -16,18 +16,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "Veuillez saisir une date de début et une date de fin.";
     }
 
-    if (empty($errors) && $categorie == 'armes') {
+    if (empty($errors)) {
         $params = [];
         $query = "
             SELECT 
                 armes.marque, 
                 armes.model, 
-                armes.prix AS prix_arme,
+                armes.prix AS prix,
+                SUM(seance_tir.nombre_munitions_tirees) AS total_tirs, 
                 SUM(CASE WHEN seance_tir.stock = 'reglementaire' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_reglementaire,
-                SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_achete,
-                SUM(reparations.prix) AS prix_reparations,
-                articles.prix_unite AS prix_unitaire_reglementaire
-                ";
+                SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_achetees,
+                SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.prix_boite ELSE 0 END) AS prix_total_achete_boite
+        ";
 
         if ($periode == 'mois') {
             $query .= ", MONTH(seance_tir.date_seance) AS mois, YEAR(seance_tir.date_seance) AS annee";
@@ -38,10 +38,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         $query .= "
-            FROM armes
-            LEFT JOIN seance_tir ON armes.id = seance_tir.arme
-            LEFT JOIN reparations ON armes.id = reparations.arme_id
-            LEFT JOIN articles ON seance_tir.arme = articles.id AND articles.type = 'munition'
+            FROM seance_tir 
+            JOIN armes ON seance_tir.arme = armes.id 
             WHERE 1=1
         ";
 
@@ -56,11 +54,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if ($periode == 'mois') {
-            $query .= " GROUP BY mois, annee, armes.id, articles.prix_unite";
+            $query .= " GROUP BY mois, annee, armes.id";
         } elseif ($periode == 'annee') {
-            $query .= " GROUP BY annee, armes.id, articles.prix_unite";
+            $query .= " GROUP BY annee, armes.id";
         } else {
-            $query .= " GROUP BY seance_tir.date_seance, armes.id, articles.prix_unite";
+            $query .= " GROUP BY seance_tir.date_seance, armes.id";
         }
 
         $stmt = $conn->prepare($query);
@@ -105,9 +103,6 @@ function getMonthName($monthNumber) {
         <label for="categorie">Catégorie:</label>
         <select id="categorie" name="categorie" class="form-control" required>
             <option value="armes">Armes</option>
-            <option value="munitions">Munitions</option>
-            <option value="seances">Séances</option>
-            <option value="articles">Articles</option>
             <option value="invites">Invités</option>
         </select>
     </div>
@@ -119,86 +114,74 @@ function getMonthName($monthNumber) {
             <option value="annee">Année</option>
         </select>
     </div>
-    <div class="form-group" id="date_debut_group" style="display:none;">
+    <div class="form-group" id="date_debut_group">
         <label for="date_debut">Date de début:</label>
         <input type="date" id="date_debut" name="date_debut" class="form-control">
     </div>
-    <div class="form-group" id="date_fin_group" style="display:none;">
+    <div class="form-group" id="date_fin_group">
         <label for="date_fin">Date de fin:</label>
         <input type="date" id="date_fin" name="date_fin" class="form-control">
     </div>
     <button type="submit" class="btn btn-primary">Afficher les statistiques</button>
 </form>
 
-<?php if (isset($seances)): ?>
+<?php if (isset($seances) && $categorie == 'armes'): ?>
     <h3>Résultats</h3>
     <table class="table table-bordered">
         <thead>
             <tr>
-                <?php if ($periode == 'mois'): ?>
-                    <th>Mois</th>
-                <?php elseif ($periode == 'annee'): ?>
-                    <th>Année</th>
-                <?php endif; ?>
+                <th>Période</th>
                 <th>Nom de l'Arme</th>
-                <th>Prix de l'Arme (€)</th>
+                <th>Prix de l'Arme</th>
                 <th>Cartouches Réglementaire Tirées</th>
                 <th>Prix Total Cartouches Réglementaire (€)</th>
                 <th>Cartouches Achetées Tirées</th>
                 <th>Prix Total Cartouches Achetées (€)</th>
-                <th>Prix de Réparation (€)</th>
+                <th>Prix de Réparation</th>
                 <th>Total des Prix (€)</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            $currentArme = null;
-            $armeTotals = [
-                'prix_arme' => 0.0,
-                'cartouches_reglementaire' => 0,
-                'prix_cartouches_reglementaire' => 0.0,
-                'cartouches_achete' => 0,
-                'prix_cartouches_achete' => 0.0,
-                'prix_reparations' => 0.0
-            ];
-
             foreach ($seances as $seance):
-                $armeName = $seance['marque'] . ' ' . $seance['model'];
-                $prix_total_reglementaire = $seance['cartouches_reglementaire'] * $seance['prix_unitaire_reglementaire'];
-                $prix_total_achete = $seance['cartouches_achete'] * ($seance['prix_total_achete_boite'] / 50); // Assumed price per 50
-                $totalPrix = $seance['prix_arme'] + $prix_total_reglementaire + $prix_total_achete + $seance['prix_reparations'];
-
-                if ($currentArme !== $armeName) {
-                    $currentArme = $armeName;
+                if (!isset($seance['prix_total_achete_boite'])) {
+                    $seance['prix_total_achete_boite'] = 0;
                 }
 
-                $armeTotals['prix_arme'] += $seance['prix_arme'];
-                $armeTotals['cartouches_reglementaire'] += $seance['cartouches_reglementaire'];
-                $armeTotals['prix_cartouches_reglementaire'] += $prix_total_reglementaire;
-                $armeTotals['cartouches_achete'] += $seance['cartouches_achete'];
-                $armeTotals['prix_cartouches_achete'] += $prix_total_achete;
-                $armeTotals['prix_reparations'] += $seance['prix_reparations'];
+                $prixTotalReglementaire = 0.0;
+                $prixTotalAchetees = 0.0;
+
+                if ($seance['cartouches_reglementaire'] > 0) {
+                    $stmt = $conn->prepare("SELECT prix_unite FROM articles WHERE type = 'munition'");
+                    $stmt->execute();
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $prixTotalReglementaire = $seance['cartouches_reglementaire'] * $result['prix_unite'];
+                }
+
+                if ($seance['cartouches_achetees'] > 0 && $seance['prix_total_achete_boite'] > 0) {
+                    $prixTotalAchetees = $seance['cartouches_achetees'] * $seance['prix_total_achete_boite'] / 50;
+                }
+
+                $totalPrix = $seance['prix'] + $prixTotalReglementaire + $prixTotalAchetees;
             ?>
                 <tr>
                     <?php if ($periode == 'mois'): ?>
                         <td><?= htmlspecialchars(getMonthName($seance['mois'])) ?></td>
                     <?php elseif ($periode == 'annee'): ?>
                         <td><?= htmlspecialchars($seance['annee']) ?></td>
+                    <?php else: ?>
+                        <td><?= htmlspecialchars($seance['date_seance']) ?></td>
                     <?php endif; ?>
-                    <td><?= htmlspecialchars($armeName) ?></td>
-                    <td><?= number_format($seance['prix_arme'], 2) ?> €</td>
+                    <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
+                    <td><?= number_format($seance['prix'], 2) ?> €</td>
                     <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
-                    <td><?= number_format($prix_total_reglementaire, 2) ?> €</td>
-                    <td><?= htmlspecialchars($seance['cartouches_achete']) ?></td>
-                    <td><?= number_format($prix_total_achete, 2) ?> €</td>
-                    <td><?= number_format($seance['prix_reparations'], 2) ?> €</td>
+                    <td><?= number_format($prixTotalReglementaire, 2) ?> €</td>
+                    <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
+                    <td><?= number_format($prixTotalAchetees, 2) ?> €</td>
+                    <td><?= number_format(isset($seance['prix_reparation']) ? $seance['prix_reparation'] : 0, 2) ?> €</td>
                     <td><?= number_format($totalPrix, 2) ?> €</td>
                 </tr>
             <?php endforeach; ?>
-            <tr>
-                <td colspan="8">Total des Prix:</td>
-                <td><?= number_format($armeTotals['prix_arme'] + $armeTotals['prix_cartouches_reglementaire'] + $armeTotals['prix_cartouches_achete'] + $armeTotals['prix_reparations'], 2) ?> €</td>
-            </tr>
         </tbody>
     </table>
 <?php endif; ?>
@@ -206,7 +189,6 @@ function getMonthName($monthNumber) {
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var categorieSelect = document.getElementById('categorie');
     var periodeSelect = document.getElementById('periode');
     var dateDebutGroup = document.getElementById('date_debut_group');
     var dateFinGroup = document.getElementById('date_fin_group');
