@@ -29,6 +29,39 @@ $valeur_totale_munitions = $result['valeur_totale_munitions'];
 $stmt = $conn->prepare("SELECT COUNT(*) AS total_armes FROM armes");
 $stmt->execute();
 $total_armes = $stmt->fetch(PDO::FETCH_ASSOC)['total_armes'];
+
+// Calcul de l'arme avec le plus de cartouches tirées
+$stmt = $conn->prepare("
+    SELECT 
+        armes.marque, 
+        armes.model, 
+        SUM(seance_tir.nombre_munitions_tirees) AS total_cartouches_tirees
+    FROM seance_tir
+    JOIN armes ON seance_tir.arme = armes.id
+    GROUP BY seance_tir.arme
+    ORDER BY total_cartouches_tirees DESC
+    LIMIT 1
+");
+$stmt->execute();
+$arme_top = $stmt->fetch(PDO::FETCH_ASSOC);
+$arme_top_nom = $arme_top['marque'] . ' ' . $arme_top['model'];
+$arme_top_cartouches = $arme_top['total_cartouches_tirees'];
+
+// Calcul du nombre d'invités et du prix total des invités pour l'année en cours
+$stmt = $conn->prepare("
+    SELECT 
+        COUNT(*) AS total_invites,
+        SUM(stands.prix_par_invite) AS prix_total_invites
+    FROM seance_tir
+    JOIN stands ON seance_tir.stand_de_tir = stands.id
+    WHERE seance_tir.nom_invite IS NOT NULL
+    AND seance_tir.nom_invite != ''
+    AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())
+");
+$stmt->execute();
+$invites_data = $stmt->fetch(PDO::FETCH_ASSOC);
+$total_invites = $invites_data['total_invites'];
+$prix_total_invites = $invites_data['prix_total_invites'];
 ?>
 
 <?php include 'header.php'; ?>
@@ -74,7 +107,8 @@ $total_armes = $stmt->fetch(PDO::FETCH_ASSOC)['total_armes'];
     <div class="row">
         <div class="col-md-4">
             <div class="rectangle rectangle4">
-                Rectangle 4
+                Arme avec le plus de cartouches tirées: <?= htmlspecialchars($arme_top_nom) ?><br>
+                Cartouches tirées: <?= htmlspecialchars($arme_top_cartouches) ?>
             </div>
         </div>
         <div class="col-md-4">
@@ -84,7 +118,8 @@ $total_armes = $stmt->fetch(PDO::FETCH_ASSOC)['total_armes'];
         </div>
         <div class="col-md-4">
             <div class="rectangle rectangle6">
-                Rectangle 6
+                Total des invités sur l'année: <?= htmlspecialchars($total_invites) ?><br>
+                Prix total des invités: <?= number_format($prix_total_invites, 2) ?> €
             </div>
         </div>
     </div>

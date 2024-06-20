@@ -18,52 +18,98 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($errors)) {
         $params = [];
-        $query = "
-            SELECT 
-                armes.marque, 
-                armes.model, 
-                armes.prix AS prix,
-                SUM(seance_tir.nombre_munitions_tirees) AS total_tirs, 
-                SUM(CASE WHEN seance_tir.stock = 'reglementaire' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_reglementaire,
-                SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_achetees,
-                SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.prix_boite ELSE 0 END) AS prix_total_achete_boite
-        ";
+        if ($categorie == 'armes') {
+            $query = "
+                SELECT 
+                    armes.marque, 
+                    armes.model, 
+                    armes.prix AS prix_arme, 
+                    SUM(CASE WHEN seance_tir.stock = 'reglementaire' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_reglementaire,
+                    SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_achetees,
+                    SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.prix_boite ELSE 0 END) AS prix_total_cartouches_achetees,
+                    armes.prix_reparation,
+                    ";
 
-        if ($periode == 'mois') {
-            $query .= ", MONTH(seance_tir.date_seance) AS mois, YEAR(seance_tir.date_seance) AS annee";
-        } elseif ($periode == 'semaine') {
-            $query .= ", seance_tir.date_seance";
-        } else {
-            $query .= ", YEAR(seance_tir.date_seance) AS annee";
+            if ($periode == 'mois') {
+                $query .= "MONTH(seance_tir.date_seance) AS mois, YEAR(seance_tir.date_seance) AS annee";
+            } elseif ($periode == 'semaine') {
+                $query .= "seance_tir.date_seance AS date_seance";
+            } else {
+                $query .= "YEAR(seance_tir.date_seance) AS annee";
+            }
+
+            $query .= "
+                FROM seance_tir 
+                JOIN armes ON seance_tir.arme = armes.id 
+                WHERE 1=1
+            ";
+
+            if ($periode == 'semaine' && $date_debut && $date_fin) {
+                $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
+                $params[':date_debut'] = $date_debut;
+                $params[':date_fin'] = $date_fin;
+            } elseif ($periode == 'mois') {
+                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
+            } elseif ($periode == 'annee') {
+                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
+            }
+
+            if ($periode == 'mois') {
+                $query .= " GROUP BY mois, annee, armes.id";
+            } elseif ($periode == 'annee') {
+                $query .= " GROUP BY annee, armes.id";
+            } else {
+                $query .= " GROUP BY seance_tir.date_seance, armes.id";
+            }
+
+            $stmt = $conn->prepare($query);
+            $stmt->execute($params);
+            $seances = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } elseif ($categorie == 'invites') {
+            $query = "
+                SELECT 
+                    stands.nom AS nom_stand,
+                    SUM(CASE WHEN seance_tir.nom_invite != '' THEN 1 ELSE 0 END) AS nombre_invites,
+                    COUNT(seance_tir.id) AS nombre_seances,
+                    SUM(CASE WHEN seance_tir.nom_invite != '' THEN 1 ELSE 0 END) * 20 AS prix_total_invite
+                ";
+
+            if ($periode == 'mois') {
+                $query .= ", MONTH(seance_tir.date_seance) AS mois, YEAR(seance_tir.date_seance) AS annee";
+            } elseif ($periode == 'semaine') {
+                $query .= ", seance_tir.date_seance AS date_seance";
+            } else {
+                $query .= ", YEAR(seance_tir.date_seance) AS annee";
+            }
+
+            $query .= "
+                FROM seance_tir 
+                JOIN stands ON seance_tir.stand_de_tir = stands.id 
+                WHERE seance_tir.nom_invite != ''
+            ";
+
+            if ($periode == 'semaine' && $date_debut && $date_fin) {
+                $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
+                $params[':date_debut'] = $date_debut;
+                $params[':date_fin'] = $date_fin;
+            } elseif ($periode == 'mois') {
+                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
+            } elseif ($periode == 'annee') {
+                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
+            }
+
+            if ($periode == 'mois') {
+                $query .= " GROUP BY mois, annee, stands.id";
+            } elseif ($periode == 'annee') {
+                $query .= " GROUP BY annee, stands.id";
+            } else {
+                $query .= " GROUP BY seance_tir.date_seance, stands.id";
+            }
+
+            $stmt = $conn->prepare($query);
+            $stmt->execute($params);
+            $seances = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-
-        $query .= "
-            FROM seance_tir 
-            JOIN armes ON seance_tir.arme = armes.id 
-            WHERE 1=1
-        ";
-
-        if ($periode == 'semaine' && $date_debut && $date_fin) {
-            $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
-            $params[':date_debut'] = $date_debut;
-            $params[':date_fin'] = $date_fin;
-        } elseif ($periode == 'mois') {
-            $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
-        } elseif ($periode == 'annee') {
-            $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
-        }
-
-        if ($periode == 'mois') {
-            $query .= " GROUP BY mois, annee, armes.id";
-        } elseif ($periode == 'annee') {
-            $query .= " GROUP BY annee, armes.id";
-        } else {
-            $query .= " GROUP BY seance_tir.date_seance, armes.id";
-        }
-
-        $stmt = $conn->prepare($query);
-        $stmt->execute($params);
-        $seances = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 
@@ -126,60 +172,89 @@ function getMonthName($monthNumber) {
 </form>
 
 <?php if (isset($seances) && $categorie == 'armes'): ?>
-    <h3>Résultats</h3>
+    <h3>Résultats pour les Armes</h3>
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Période</th>
+                <?php if ($periode == 'mois'): ?>
+                    <th>Mois</th>
+                <?php elseif ($periode == 'annee'): ?>
+                    <th>Année</th>
+                <?php elseif ($periode == 'semaine'): ?>
+                    <th>Date</th>
+                <?php endif; ?>
                 <th>Nom de l'Arme</th>
                 <th>Prix de l'Arme</th>
                 <th>Cartouches Réglementaire Tirées</th>
-                <th>Prix Total Cartouches Réglementaire (€)</th>
                 <th>Cartouches Achetées Tirées</th>
                 <th>Prix Total Cartouches Achetées (€)</th>
                 <th>Prix de Réparation</th>
+                <th>Total cartouches tirées</th>
                 <th>Total des Prix (€)</th>
             </tr>
         </thead>
         <tbody>
             <?php
             foreach ($seances as $seance):
-                if (!isset($seance['prix_total_achete_boite'])) {
-                    $seance['prix_total_achete_boite'] = 0;
-                }
-
-                $prixTotalReglementaire = 0.0;
-                $prixTotalAchetees = 0.0;
-
-                if ($seance['cartouches_reglementaire'] > 0) {
-                    $stmt = $conn->prepare("SELECT prix_unite FROM articles WHERE type = 'munition'");
-                    $stmt->execute();
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    $prixTotalReglementaire = $seance['cartouches_reglementaire'] * $result['prix_unite'];
-                }
-
-                if ($seance['cartouches_achetees'] > 0 && $seance['prix_total_achete_boite'] > 0) {
-                    $prixTotalAchetees = $seance['cartouches_achetees'] * $seance['prix_total_achete_boite'] / 50;
-                }
-
-                $totalPrix = $seance['prix'] + $prixTotalReglementaire + $prixTotalAchetees;
+                $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
+                $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
+                $totalDesPrix = $seance['prix_arme'] + $seance['prix_total_cartouches_achetees'] + $seance['prix_reparation'];
             ?>
                 <tr>
                     <?php if ($periode == 'mois'): ?>
-                        <td><?= htmlspecialchars(getMonthName($seance['mois'])) ?></td>
+                        <td><?= htmlspecialchars($periodName) ?></td>
                     <?php elseif ($periode == 'annee'): ?>
-                        <td><?= htmlspecialchars($seance['annee']) ?></td>
-                    <?php else: ?>
-                        <td><?= htmlspecialchars($seance['date_seance']) ?></td>
+                        <td><?= htmlspecialchars($periodName) ?></td>
+                    <?php elseif ($periode == 'semaine'): ?>
+                        <td><?= htmlspecialchars($periodName) ?></td>
                     <?php endif; ?>
                     <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
-                    <td><?= number_format($seance['prix'], 2) ?> €</td>
+                    <td><?= number_format($seance['prix_arme'], 2) ?> €</td>
                     <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
-                    <td><?= number_format($prixTotalReglementaire, 2) ?> €</td>
                     <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
-                    <td><?= number_format($prixTotalAchetees, 2) ?> €</td>
-                    <td><?= number_format(isset($seance['prix_reparation']) ? $seance['prix_reparation'] : 0, 2) ?> €</td>
-                    <td><?= number_format($totalPrix, 2) ?> €</td>
+                    <td><?= number_format($seance['prix_total_cartouches_achetees'], 2) ?> €</td>
+                    <td><?= number_format($seance['prix_reparation'], 2) ?> €</td>
+                    <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
+                    <td><?= number_format($totalDesPrix, 2) ?> €</td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php elseif (isset($seances) && $categorie == 'invites'): ?>
+    <h3>Résultats pour les Invités</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <?php if ($periode == 'mois'): ?>
+                    <th>Mois</th>
+                <?php elseif ($periode == 'annee'): ?>
+                    <th>Année</th>
+                <?php elseif ($periode == 'semaine'): ?>
+                    <th>Date</th>
+                <?php endif; ?>
+                <th>Stand de Tir</th>
+                <th>Nombre d'Invités</th>
+                <th>Nombre de Séances</th>
+                <th>Prix Total par Invité (€)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            foreach ($seances as $seance):
+                $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
+            ?>
+                <tr>
+                    <?php if ($periode == 'mois'): ?>
+                        <td><?= htmlspecialchars($periodName) ?></td>
+                    <?php elseif ($periode == 'annee'): ?>
+                        <td><?= htmlspecialchars($periodName) ?></td>
+                    <?php elseif ($periode == 'semaine'): ?>
+                        <td><?= htmlspecialchars($periodName) ?></td>
+                    <?php endif; ?>
+                    <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
+                    <td><?= htmlspecialchars($seance['nombre_invites']) ?></td>
+                    <td><?= htmlspecialchars($seance['nombre_seances']) ?></td>
+                    <td><?= number_format($seance['prix_total_invite'], 2) ?> €</td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -204,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     periodeSelect.addEventListener('change', toggleDateFields);
-    toggleDateFields(); // initial call to set the correct visibility on page load
+    toggleDateFields(); // appel initial pour définir la visibilité correcte au chargement de la page
 
     var form = document.querySelector('form');
     form.addEventListener('submit', function(event) {
