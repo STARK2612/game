@@ -24,6 +24,7 @@ check_inactivity();
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_seances.php">Séances de Tir</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_fournisseurs.php">Fournisseurs</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_stands.php">Stands</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="gestion_statistiques.php">Statistiques</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion.php">Gestion</a></li>
                     <?php if ($_SESSION['user_role'] == 'administrateur'): ?>
                         <li class="nav-item"><a class="nav-link text-white" href="gestion_utilisateurs.php">Utilisateurs</a></li>

@@ -15,8 +15,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $heure_fin = $_POST['heure_fin'];
         $nom_invite = $_POST['nom_invite'];
         $commentaire = $_POST['commentaire'];
-
-        $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire)");
+        
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire)");
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+            $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, prix_boite, tarif, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :prix_boite, :tarif, :nom_invite, :commentaire)");
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+        }
+        
         $stmt->bindParam(':arme', $arme);
         $stmt->bindParam(':stock', $stock);
         $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
@@ -115,15 +124,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $heure_fin = $_POST['heure_fin'];
         $nom_invite = $_POST['nom_invite'];
         $commentaire = $_POST['commentaire'];
+        
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, prix_boite = :prix_boite, tarif = :tarif, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+        }
 
-        // Récupérer les informations de la séance de tir avant mise à jour
-        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees FROM seance_tir WHERE id = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        $seance = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Mettre à jour la séance de tir
-        $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':arme', $arme);
         $stmt->bindParam(':stock', $stock);
@@ -245,7 +256,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($seance['nom_invite']) ?></td>
             <td><?= htmlspecialchars($seance['commentaire']) ?></td>
             <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-stock="<?= $seance['stock'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-stock="<?= $seance['stock'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-prix_boite="<?= $seance['prix_boite'] ?>" data-tarif="<?= $seance['tarif'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
                 <form method="post" action="gestion_seances.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette séance ?');">
                     <input type="hidden" name="id" value="<?= $seance['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
@@ -288,6 +299,17 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="form-group">
                         <label for="nombre_munitions_tirees">Nombre de Munitions Tirées:</label>
                         <input type="number" id="nombre_munitions_tirees" name="nombre_munitions_tirees" class="form-control" required>
+                    </div>
+                    <div class="form-group" id="prix_boite_group">
+                        <label for="prix_boite">Prix de la boîte de munitions:</label>
+                        <input type="number" id="prix_boite" name="prix_boite" class="form-control" step="0.01">
+                    </div>
+                    <div class="form-group" id="tarif_group">
+                        <label for="tarif">Tarif:</label>
+                        <select id="tarif" name="tarif" class="form-control">
+                            <option value="club">Tarif Club</option>
+                            <option value="exterieur">Tarif Extérieur</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="stand_de_tir">Stand de Tir:</label>
@@ -356,6 +378,17 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <label for="edit-nombre_munitions_tirees">Nombre de Munitions Tirées:</label>
                         <input type="number" id="edit-nombre_munitions_tirees" name="nombre_munitions_tirees" class="form-control" required>
                     </div>
+                    <div class="form-group" id="edit-prix_boite_group">
+                        <label for="edit-prix_boite">Prix de la boîte de munitions:</label>
+                        <input type="number" id="edit-prix_boite" name="prix_boite" class="form-control" step="0.01">
+                    </div>
+                    <div class="form-group" id="edit-tarif_group">
+                        <label for="edit-tarif">Tarif:</label>
+                        <select id="edit-tarif" name="tarif" class="form-control">
+                            <option value="club">Tarif Club</option>
+                            <option value="exterieur">Tarif Extérieur</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="edit-stand_de_tir">Stand de Tir:</label>
                         <select id="edit-stand_de_tir" name="stand_de_tir" class="form-control" required>
@@ -416,6 +449,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var date_seance = btn.getAttribute('data-date_seance');
             var heure_debut = btn.getAttribute('data-heure_debut');
             var heure_fin = btn.getAttribute('data-heure_fin');
+            var prix_boite = btn.getAttribute('data-prix_boite');
+            var tarif = btn.getAttribute('data-tarif');
             var nom_invite = btn.getAttribute('data-nom_invite');
             var commentaire = btn.getAttribute('data-commentaire');
 
@@ -427,12 +462,48 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-date_seance').value = date_seance;
             document.getElementById('edit-heure_debut').value = heure_debut;
             document.getElementById('edit-heure_fin').value = heure_fin;
+            document.getElementById('edit-prix_boite').value = prix_boite;
+            document.getElementById('edit-tarif').value = tarif;
             document.getElementById('edit-nom_invite').value = nom_invite;
             document.getElementById('edit-commentaire').value = commentaire;
+
+            if (stock === 'reglementaire') {
+                document.getElementById('edit-prix_boite_group').style.display = 'none';
+                document.getElementById('edit-tarif_group').style.display = 'none';
+            } else {
+                document.getElementById('edit-prix_boite_group').style.display = 'block';
+                document.getElementById('edit-tarif_group').style.display = 'block';
+            }
 
             editModal.show();
         }
     });
+
+    var stockSelect = document.getElementById('stock');
+    stockSelect.onchange = function() {
+        var prixBoiteGroup = document.getElementById('prix_boite_group');
+        var tarifGroup = document.getElementById('tarif_group');
+        if (stockSelect.value === 'reglementaire') {
+            prixBoiteGroup.style.display = 'none';
+            tarifGroup.style.display = 'none';
+        } else {
+            prixBoiteGroup.style.display = 'block';
+            tarifGroup.style.display = 'block';
+        }
+    };
+
+    var editStockSelect = document.getElementById('edit-stock');
+    editStockSelect.onchange = function() {
+        var editPrixBoiteGroup = document.getElementById('edit-prix_boite_group');
+        var editTarifGroup = document.getElementById('edit-tarif_group');
+        if (editStockSelect.value === 'reglementaire') {
+            editPrixBoiteGroup.style.display = 'none';
+            editTarifGroup.style.display = 'none';
+        } else {
+            editPrixBoiteGroup.style.display = 'block';
+            editTarifGroup.style.display = 'block';
+        }
+    };
 });
 </script>
 
