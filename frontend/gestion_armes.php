@@ -148,11 +148,11 @@ $_SESSION['total_armes'] = $total_armes;
                 <td><?= htmlspecialchars($arme['num_serie']) ?></td>
                 <td>
                     <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
+                    <button class="btn btn-sm btn-info fiche-vente-btn" data-id="<?= $arme['id'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>">Fiche de Vente</button>
                     <form method="post" action="gestion_armes.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
                         <input type="hidden" name="id" value="<?= $arme['id'] ?>">
                         <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                     </form>
-                    <button class="btn btn-sm btn-info" onclick="window.open('generate_pdf.php?id=<?= $arme['id'] ?>', '_blank')">Fiche de Vente</button>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -400,6 +400,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             editModal.show();
+        }
+    });
+
+    // Vérification avant génération du PDF
+    var ficheVenteBtns = document.querySelectorAll(".fiche-vente-btn");
+
+    ficheVenteBtns.forEach(function(btn) {
+        btn.onclick = function() {
+            var etatRevente = btn.getAttribute('data-etat_revente');
+            var dateReparation = btn.getAttribute('data-date_reparation');
+            if (!etatRevente || !dateReparation) {
+                alert('Veuillez compléter les champs "État pour la vente" et "Date de réparation" avant de générer la fiche de vente.');
+                return false;
+            }
+            var id = btn.getAttribute('data-id');
+            window.open('generate_pdf.php?id=' + id, '_blank');
         }
     });
 });

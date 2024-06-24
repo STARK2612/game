@@ -39,9 +39,6 @@ check_inactivity();
                     <li class="nav-item custom-nav-item"><a class="nav-link text-white custom-nav-link" href="gestion_stands.php">Stands</a></li>
                     <li class="nav-item custom-nav-item"><a class="nav-link text-white custom-nav-link" href="gestion_statistiques.php">Statistiques</a></li>
                     <li class="nav-item custom-nav-item"><a class="nav-link text-white custom-nav-link" href="gestion.php">Gestion</a></li>
-                    <?php if ($_SESSION['user_role'] == 'administrateur'): ?>
-                        <li class="nav-item custom-nav-item"><a class="nav-link text-white custom-nav-link" href="gestion_utilisateurs.php">Utilisateurs</a></li>
-                    <?php endif; ?>
                     <li class="nav-item custom-nav-item"><a class="nav-link text-white custom-nav-link" href="../backend/logout.php">Déconnexion</a></li>
                 </ul>
             </nav>

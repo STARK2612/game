@@ -8,25 +8,39 @@ if ($_SESSION['user_role'] != 'administrateur') {
     exit;
 }
 
+$config_file = '../backend/config.json';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $config = [];
+    if (file_exists($config_file)) {
+        $config = json_decode(file_get_contents($config_file), true);
+    }
+
     if (isset($_POST['num_debut_articles'])) {
-        $num_debut_articles = $_POST['num_debut_articles'];
-        file_put_contents('../backend/num_debut_articles.txt', $num_debut_articles);
+        $config['num_debut_articles'] = $_POST['num_debut_articles'];
     }
     if (isset($_POST['num_debut_seances'])) {
-        $num_debut_seances = $_POST['num_debut_seances'];
-        file_put_contents('../backend/num_debut_seances.txt', $num_debut_seances);
+        $config['num_debut_seances'] = $_POST['num_debut_seances'];
     }
     if (isset($_POST['nav_item_color']) && isset($_POST['nav_link_hover_color'])) {
-        $_SESSION['nav_item_color'] = $_POST['nav_item_color'];
-        $_SESSION['nav_link_hover_color'] = $_POST['nav_link_hover_color'];
-        $_SESSION['footer_bg_color'] = $_POST['nav_item_color']; // Utiliser la même couleur pour le pied de page
+        $config['nav_item_color'] = $_POST['nav_item_color'];
+        $config['nav_link_hover_color'] = $_POST['nav_link_hover_color'];
+        $config['footer_bg_color'] = $_POST['nav_item_color'];
     }
+
+    file_put_contents($config_file, json_encode($config));
 }
 
-// Charger les numéros de départ actuels
-$num_debut_articles = file_get_contents('../backend/num_debut_articles.txt');
-$num_debut_seances = file_get_contents('../backend/num_debut_seances.txt');
+// Charger les paramètres actuels
+$config = [];
+if (file_exists($config_file)) {
+    $config = json_decode(file_get_contents($config_file), true);
+}
+
+$num_debut_articles = $config['num_debut_articles'] ?? '';
+$num_debut_seances = $config['num_debut_seances'] ?? '';
+$nav_item_color = $config['nav_item_color'] ?? '#343a40';
+$nav_link_hover_color = $config['nav_link_hover_color'] ?? '#f8f9fa';
 ?>
 
 <?php include 'header.php'; ?>
@@ -81,11 +95,11 @@ $num_debut_seances = file_get_contents('../backend/num_debut_seances.txt');
                     <form method="post" action="gestion.php">
                         <div class="form-group">
                             <label for="nav_item_color">Couleur de fond des éléments du menu:</label>
-                            <input type="color" id="nav_item_color" name="nav_item_color" class="form-control" value="<?= isset($_SESSION['nav_item_color']) ? $_SESSION['nav_item_color'] : '#343a40'; ?>">
+                            <input type="color" id="nav_item_color" name="nav_item_color" class="form-control" value="<?= htmlspecialchars($nav_item_color) ?>">
                         </div>
                         <div class="form-group">
                             <label for="nav_link_hover_color">Couleur de surbrillance des liens du menu:</label>
-                            <input type="color" id="nav_link_hover_color" name="nav_link_hover_color" class="form-control" value="<?= isset($_SESSION['nav_link_hover_color']) ? $_SESSION['nav_link_hover_color'] : '#f8f9fa'; ?>">
+                            <input type="color" id="nav_link_hover_color" name="nav_link_hover_color" class="form-control" value="<?= htmlspecialchars($nav_link_hover_color) ?>">
                         </div>
                         <button type="submit" class="btn btn-primary">Mettre à jour les couleurs</button>
                     </form>
