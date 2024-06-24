@@ -17,6 +17,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $num_debut_seances = $_POST['num_debut_seances'];
         file_put_contents('../backend/num_debut_seances.txt', $num_debut_seances);
     }
+    if (isset($_POST['nav_item_color']) && isset($_POST['nav_link_hover_color'])) {
+        $_SESSION['nav_item_color'] = $_POST['nav_item_color'];
+        $_SESSION['nav_link_hover_color'] = $_POST['nav_link_hover_color'];
+        $_SESSION['footer_bg_color'] = $_POST['nav_item_color']; // Utiliser la même couleur pour le pied de page
+    }
 }
 
 // Charger les numéros de départ actuels
@@ -62,6 +67,27 @@ $num_debut_seances = file_get_contents('../backend/num_debut_seances.txt');
                             <input type="number" id="num_debut_seances" name="num_debut_seances" class="form-control" value="<?= htmlspecialchars($num_debut_seances) ?>">
                         </div>
                         <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Changer les couleurs du menu</h5>
+                    <form method="post" action="gestion.php">
+                        <div class="form-group">
+                            <label for="nav_item_color">Couleur de fond des éléments du menu:</label>
+                            <input type="color" id="nav_item_color" name="nav_item_color" class="form-control" value="<?= isset($_SESSION['nav_item_color']) ? $_SESSION['nav_item_color'] : '#343a40'; ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="nav_link_hover_color">Couleur de surbrillance des liens du menu:</label>
+                            <input type="color" id="nav_link_hover_color" name="nav_link_hover_color" class="form-control" value="<?= isset($_SESSION['nav_link_hover_color']) ? $_SESSION['nav_link_hover_color'] : '#f8f9fa'; ?>">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Mettre à jour les couleurs</button>
                     </form>
                 </div>
             </div>

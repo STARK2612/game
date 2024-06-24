@@ -42,8 +42,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
-        // Supprimer d'abord les enregistrements associés dans la table achats
+        // Supprimer les enregistrements associés dans la table stock_reglementaire
+        $stmt = $conn->prepare("DELETE FROM stock_reglementaire WHERE article_id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        // Supprimer les enregistrements associés dans la table achats
         $stmt = $conn->prepare("DELETE FROM achats WHERE article_id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        // Supprimer les enregistrements associés dans la table seance_tir
+        $stmt = $conn->prepare("DELETE FROM seance_tir WHERE arme = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
 

@@ -169,96 +169,115 @@ function getMonthName($monthNumber) {
         <input type="date" id="date_fin" name="date_fin" class="form-control">
     </div>
     <button type="submit" class="btn btn-primary">Afficher les statistiques</button>
+    <button type="button" class="btn btn-secondary" onclick="printTable()">Imprimer le tableau</button>
 </form>
 
 <?php if (isset($seances) && $categorie == 'armes'): ?>
     <h3>Résultats pour les Armes</h3>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <?php if ($periode == 'mois'): ?>
-                    <th>Mois</th>
-                <?php elseif ($periode == 'annee'): ?>
-                    <th>Année</th>
-                <?php elseif ($periode == 'semaine'): ?>
-                    <th>Date</th>
-                <?php endif; ?>
-                <th>Nom de l'Arme</th>
-                <th>Prix de l'Arme</th>
-                <th>Cartouches Réglementaire Tirées</th>
-                <th>Cartouches Achetées Tirées</th>
-                <th>Prix Total Cartouches Achetées (€)</th>
-                <th>Prix de Réparation</th>
-                <th>Total cartouches tirées</th>
-                <th>Total des Prix (€)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            foreach ($seances as $seance):
-                $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
-                $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
-                $totalDesPrix = $seance['prix_arme'] + $seance['prix_total_cartouches_achetees'] + $seance['prix_reparation'];
-            ?>
+    <div id="stat-table">
+        <table class="table table-bordered">
+            <thead>
                 <tr>
                     <?php if ($periode == 'mois'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Mois</th>
                     <?php elseif ($periode == 'annee'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Année</th>
                     <?php elseif ($periode == 'semaine'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Date</th>
                     <?php endif; ?>
-                    <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
-                    <td><?= number_format($seance['prix_arme'], 2) ?> €</td>
-                    <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
-                    <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
-                    <td><?= number_format($seance['prix_total_cartouches_achetees'], 2) ?> €</td>
-                    <td><?= number_format($seance['prix_reparation'], 2) ?> €</td>
-                    <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
-                    <td><?= number_format($totalDesPrix, 2) ?> €</td>
+                    <th>Nom de l'Arme</th>
+                    <th>Prix de l'Arme</th>
+                    <th>Cartouches Réglementaire Tirées</th>
+                    <th>Cartouches Achetées Tirées</th>
+                    <th>Prix Total Cartouches Achetées (€)</th>
+                    <th>Prix de Réparation</th>
+                    <th>Total cartouches tirées</th>
+                    <th>Total des Prix (€)</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php
+                foreach ($seances as $seance):
+                    $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
+                    $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
+                    $totalDesPrix = $seance['prix_arme'] + $seance['prix_total_cartouches_achetees'] + $seance['prix_reparation'];
+                ?>
+                    <tr>
+                        <?php if ($periode == 'mois'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php elseif ($periode == 'annee'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php elseif ($periode == 'semaine'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php endif; ?>
+                        <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
+                        <td><?= number_format($seance['prix_arme'], 2) ?> €</td>
+                        <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
+                        <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
+                        <td><?= number_format($seance['prix_total_cartouches_achetees'], 2) ?> €</td>
+                        <td><?= number_format($seance['prix_reparation'], 2) ?> €</td>
+                        <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
+                        <td><?= number_format($totalDesPrix, 2) ?> €</td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php elseif (isset($seances) && $categorie == 'invites'): ?>
     <h3>Résultats pour les Invités</h3>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <?php if ($periode == 'mois'): ?>
-                    <th>Mois</th>
-                <?php elseif ($periode == 'annee'): ?>
-                    <th>Année</th>
-                <?php elseif ($periode == 'semaine'): ?>
-                    <th>Date</th>
-                <?php endif; ?>
-                <th>Stand de Tir</th>
-                <th>Nombre d'Invités</th>
-                <th>Nombre de Séances</th>
-                <th>Prix Total par Invité (€)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            foreach ($seances as $seance):
-                $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
-            ?>
+    <div id="stat-table">
+        <table class="table table-bordered">
+            <thead>
                 <tr>
                     <?php if ($periode == 'mois'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Mois</th>
                     <?php elseif ($periode == 'annee'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Année</th>
                     <?php elseif ($periode == 'semaine'): ?>
-                        <td><?= htmlspecialchars($periodName) ?></td>
+                        <th>Date</th>
                     <?php endif; ?>
-                    <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
-                    <td><?= htmlspecialchars($seance['nombre_invites']) ?></td>
-                    <td><?= htmlspecialchars($seance['nombre_seances']) ?></td>
-                    <td><?= number_format($seance['prix_total_invite'], 2) ?> €</td>
+                    <th>Stand de Tir</th>
+                    <th>Nombre d'Invités</th>
+                    <th>Nombre de Séances</th>
+                    <th>Prix Total par Invité (€)</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php
+                $totalInvites = 0;
+                $totalSeances = 0;
+                $totalPrixInvite = 0;
+                
+                foreach ($seances as $seance):
+                    $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
+                    $totalInvites += $seance['nombre_invites'];
+                    $totalSeances += $seance['nombre_seances'];
+                    $totalPrixInvite += $seance['prix_total_invite'];
+                ?>
+                    <tr>
+                        <?php if ($periode == 'mois'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php elseif ($periode == 'annee'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php elseif ($periode == 'semaine'): ?>
+                            <td><?= htmlspecialchars($periodName) ?></td>
+                        <?php endif; ?>
+                        <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
+                        <td><?= htmlspecialchars($seance['nombre_invites']) ?></td>
+                        <td><?= htmlspecialchars($seance['nombre_seances']) ?></td>
+                        <td><?= number_format($seance['prix_total_invite'], 2) ?> €</td>
+                    </tr>
+                <?php endforeach; ?>
+                <!-- Ligne de total -->
+                <tr>
+                    <td colspan="<?php if ($periode == 'mois' || $periode == 'annee') { echo '2'; } else { echo '2'; } ?>"><strong>Total</strong></td>
+                    <td><strong><?= htmlspecialchars($totalInvites) ?></strong></td>
+                    <td><strong><?= htmlspecialchars($totalSeances) ?></strong></td>
+                    <td><strong><?= number_format($totalPrixInvite, 2) ?> €</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 <?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -293,6 +312,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function printTable() {
+    var tableContents = document.getElementById('stat-table').innerHTML;
+    var printWindow = window.open('', '', 'height=800,width=1200');
+    printWindow.document.write('<html><head><title>Statistiques</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write('table {width: 100%; border-collapse: collapse;}');
+    printWindow.document.write('th, td {border: 1px solid black; padding: 10px; text-align: left;}');
+    printWindow.document.write('thead {display: table-header-group;}');
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(tableContents);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
 </script>
 
 <?php include 'footer.php'; ?>

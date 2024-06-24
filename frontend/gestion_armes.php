@@ -152,6 +152,7 @@ $_SESSION['total_armes'] = $total_armes;
                         <input type="hidden" name="id" value="<?= $arme['id'] ?>">
                         <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                     </form>
+                    <button class="btn btn-sm btn-info" onclick="window.open('generate_pdf.php?id=<?= $arme['id'] ?>', '_blank')">Fiche de Vente</button>
                 </td>
             </tr>
             <?php endforeach; ?>

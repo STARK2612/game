@@ -13,24 +13,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $date_seance = $_POST['date_seance'];
         $heure_debut = $_POST['heure_debut'];
         $heure_fin = $_POST['heure_fin'];
-        $prix_boite = ($stock == 'reglementaire') ? null : $_POST['prix_boite'];
-        $tarif = ($stock == 'reglementaire') ? null : $_POST['tarif'];
         $nom_invite = $_POST['nom_invite'];
         $commentaire = $_POST['commentaire'];
 
-        $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, prix_boite, tarif, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :prix_boite, :tarif, :nom_invite, :commentaire)");
-        $stmt->bindParam(':arme', $arme);
-        $stmt->bindParam(':stock', $stock);
-        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
-        $stmt->bindParam(':stand_de_tir', $stand_de_tir);
-        $stmt->bindParam(':date_seance', $date_seance);
-        $stmt->bindParam(':heure_debut', $heure_debut);
-        $stmt->bindParam(':heure_fin', $heure_fin);
-        $stmt->bindParam(':prix_boite', $prix_boite);
-        $stmt->bindParam(':tarif', $tarif);
-        $stmt->bindParam(':nom_invite', $nom_invite);
-        $stmt->bindParam(':commentaire', $commentaire);
-        $stmt->execute();
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire)");
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+
+            $stmt = $conn->prepare("INSERT INTO seance_tir (arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, prix_boite, tarif, nom_invite, commentaire) VALUES (:arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :prix_boite, :tarif, :nom_invite, :commentaire)");
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        }
 
         // Mettre à jour le stock réglementaire
         if ($stock == 'reglementaire') {
@@ -117,8 +132,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $date_seance = $_POST['date_seance'];
         $heure_debut = $_POST['heure_debut'];
         $heure_fin = $_POST['heure_fin'];
-        $prix_boite = ($stock == 'reglementaire') ? null : $_POST['prix_boite'];
-        $tarif = ($stock == 'reglementaire') ? null : $_POST['tarif'];
         $nom_invite = $_POST['nom_invite'];
         $commentaire = $_POST['commentaire'];
 
@@ -128,21 +141,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
         $seance = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Mettre à jour la séance de tir
-        $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, prix_boite = :prix_boite, tarif = :tarif, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->bindParam(':arme', $arme);
-        $stmt->bindParam(':stock', $stock);
-        $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
-        $stmt->bindParam(':stand_de_tir', $stand_de_tir);
-        $stmt->bindParam(':date_seance', $date_seance);
-        $stmt->bindParam(':heure_debut', $heure_debut);
-        $stmt->bindParam(':heure_fin', $heure_fin);
-        $stmt->bindParam(':prix_boite', $prix_boite);
-        $stmt->bindParam(':tarif', $tarif);
-        $stmt->bindParam(':nom_invite', $nom_invite);
-        $stmt->bindParam(':commentaire', $commentaire);
-        $stmt->execute();
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, prix_boite = :prix_boite, tarif = :tarif, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        }
 
         // Mettre à jour le stock réglementaire si nécessaire
         if ($seance['stock'] != $stock) {
@@ -193,8 +223,10 @@ $stmt = $conn->prepare("
         stands.nom AS nom_stand 
     FROM 
         seance_tir 
-    JOIN armes ON seance_tir.arme = armes.id 
-    JOIN stands ON seance_tir.stand_de_tir = stands.id
+    JOIN 
+        armes ON seance_tir.arme = armes.id 
+    JOIN 
+        stands ON seance_tir.stand_de_tir = stands.id
 ");
 $stmt->execute();
 $seances = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -248,7 +280,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
             <td><?= htmlspecialchars($seance['nombre_munitions_tirees']) ?></td>
             <td><?= htmlspecialchars($seance['stock']) ?></td>
-            <td><?= ($seance['stock'] == 'achete') ? htmlspecialchars($seance['prix_boite']) : '' ?></td>
+            <td><?= htmlspecialchars($seance['prix_boite']) ?> €</td>
             <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
             <td><?= htmlspecialchars($seance['nom_invite']) ?></td>
             <td><?= htmlspecialchars($seance['commentaire']) ?></td>
@@ -432,34 +464,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var addBtn = document.getElementById("add-btn");
     var editBtns = document.querySelectorAll(".edit-btn");
 
-    var stockSelect = document.getElementById("stock");
-    var prixBoiteGroup = document.getElementById("prix_boite_group");
-    var tarifGroup = document.getElementById("tarif_group");
-
-    var editStockSelect = document.getElementById("edit-stock");
-    var editPrixBoiteGroup = document.getElementById("edit-prix_boite_group");
-    var editTarifGroup = document.getElementById("edit-tarif_group");
-
-    stockSelect.addEventListener('change', function() {
-        if (stockSelect.value === 'reglementaire') {
-            prixBoiteGroup.style.display = 'none';
-            tarifGroup.style.display = 'none';
-        } else {
-            prixBoiteGroup.style.display = 'block';
-            tarifGroup.style.display = 'block';
-        }
-    });
-
-    editStockSelect.addEventListener('change', function() {
-        if (editStockSelect.value === 'reglementaire') {
-            editPrixBoiteGroup.style.display = 'none';
-            editTarifGroup.style.display = 'none';
-        } else {
-            editPrixBoiteGroup.style.display = 'block';
-            editTarifGroup.style.display = 'block';
-        }
-    });
-
     addBtn.onclick = function() {
         addModal.show();
     }
@@ -493,14 +497,34 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-commentaire').value = commentaire;
 
             if (stock === 'reglementaire') {
-                editPrixBoiteGroup.style.display = 'none';
-                editTarifGroup.style.display = 'none';
+                document.getElementById('edit-prix_boite_group').style.display = 'none';
+                document.getElementById('edit-tarif_group').style.display = 'none';
             } else {
-                editPrixBoiteGroup.style.display = 'block';
-                editTarifGroup.style.display = 'block';
+                document.getElementById('edit-prix_boite_group').style.display = 'block';
+                document.getElementById('edit-tarif_group').style.display = 'block';
             }
 
             editModal.show();
+        }
+    });
+
+    document.getElementById('stock').addEventListener('change', function() {
+        if (this.value === 'reglementaire') {
+            document.getElementById('prix_boite_group').style.display = 'none';
+            document.getElementById('tarif_group').style.display = 'none';
+        } else {
+            document.getElementById('prix_boite_group').style.display = 'block';
+            document.getElementById('tarif_group').style.display = 'block';
+        }
+    });
+
+    document.getElementById('edit-stock').addEventListener('change', function() {
+        if (this.value === 'reglementaire') {
+            document.getElementById('edit-prix_boite_group').style.display = 'none';
+            document.getElementById('edit-tarif_group').style.display = 'none';
+        } else {
+            document.getElementById('edit-prix_boite_group').style.display = 'block';
+            document.getElementById('edit-tarif_group').style.display = 'block';
         }
     });
 });

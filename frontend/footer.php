@@ -1,6 +1,6 @@
 </main>
-<footer class="bg-dark text-white text-center p-3 mt-4">
-    <p>&copy; 2024 Gestionnaire d'armes</p>
-</footer>
+    <footer class="custom-nav-item text-white text-center p-3 mt-4">
+        <p>&copy; <?= date('Y') ?> Gestionnaire d'Armes, de Munitions et d'Equipements</p>
+    </footer>
 </body>
 </html>
