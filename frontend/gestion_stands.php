@@ -77,7 +77,20 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'header.php'; ?>
+<style>
+    .table td {
+    word-wrap: break-word;
+}
 
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+</style>
 <h2>Gestion des Stands de Tir</h2>
 <table class="table table-bordered">
     <thead>
@@ -104,9 +117,9 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($stand['telephone']) ?></td>
             <td><?= htmlspecialchars($stand['email']) ?></td>
             <td><?= htmlspecialchars($stand['prix_par_invite']) ?></td>
-            <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
-                <form method="post" action="gestion_stands.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
+            <td class="action-buttons">
+                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
+                <form method="post" action="gestion_stands.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
                     <input type="hidden" name="id" value="<?= $stand['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                 </form>

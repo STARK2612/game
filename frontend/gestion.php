@@ -8,39 +8,30 @@ if ($_SESSION['user_role'] != 'administrateur') {
     exit;
 }
 
-$config_file = '../backend/config.json';
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $config = [];
-    if (file_exists($config_file)) {
-        $config = json_decode(file_get_contents($config_file), true);
-    }
-
     if (isset($_POST['num_debut_articles'])) {
-        $config['num_debut_articles'] = $_POST['num_debut_articles'];
+        $num_debut_articles = $_POST['num_debut_articles'];
+        file_put_contents('../backend/num_debut_articles.txt', $num_debut_articles);
     }
     if (isset($_POST['num_debut_seances'])) {
-        $config['num_debut_seances'] = $_POST['num_debut_seances'];
+        $num_debut_seances = $_POST['num_debut_seances'];
+        file_put_contents('../backend/num_debut_seances.txt', $num_debut_seances);
     }
-    if (isset($_POST['nav_item_color']) && isset($_POST['nav_link_hover_color'])) {
-        $config['nav_item_color'] = $_POST['nav_item_color'];
-        $config['nav_link_hover_color'] = $_POST['nav_link_hover_color'];
-        $config['footer_bg_color'] = $_POST['nav_item_color'];
+    if (isset($_POST['menu_color'])) {
+        $menu_color = $_POST['menu_color'];
+        file_put_contents('../backend/menu_color.txt', $menu_color);
     }
-
-    file_put_contents($config_file, json_encode($config));
+    if (isset($_POST['hover_color'])) {
+        $hover_color = $_POST['hover_color'];
+        file_put_contents('../backend/hover_color.txt', $hover_color);
+    }
 }
 
-// Charger les paramètres actuels
-$config = [];
-if (file_exists($config_file)) {
-    $config = json_decode(file_get_contents($config_file), true);
-}
-
-$num_debut_articles = $config['num_debut_articles'] ?? '';
-$num_debut_seances = $config['num_debut_seances'] ?? '';
-$nav_item_color = $config['nav_item_color'] ?? '#343a40';
-$nav_link_hover_color = $config['nav_link_hover_color'] ?? '#f8f9fa';
+// Charger les configurations actuelles
+$num_debut_articles = file_exists('../backend/num_debut_articles.txt') ? file_get_contents('../backend/num_debut_articles.txt') : '0';
+$num_debut_seances = file_exists('../backend/num_debut_seances.txt') ? file_get_contents('../backend/num_debut_seances.txt') : '0';
+$menu_color = file_exists('../backend/menu_color.txt') ? file_get_contents('../backend/menu_color.txt') : '#000000'; // Default color black
+$hover_color = file_exists('../backend/hover_color.txt') ? file_get_contents('../backend/hover_color.txt') : '#000000'; // Default color black
 ?>
 
 <?php include 'header.php'; ?>
@@ -86,49 +77,27 @@ $nav_link_hover_color = $config['nav_link_hover_color'] ?? '#f8f9fa';
             </div>
         </div>
     </div>
-
+    
     <div class="row mt-4">
-        <div class="col-md-12">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Changer les couleurs du menu</h5>
+                    <h5 class="card-title">Configuration des Couleurs du Menu</h5>
                     <form method="post" action="gestion.php">
                         <div class="form-group">
-                            <label for="nav_item_color">Couleur de fond des éléments du menu:</label>
-                            <input type="color" id="nav_item_color" name="nav_item_color" class="form-control" value="<?= htmlspecialchars($nav_item_color) ?>">
+                            <label for="menu_color">Couleur de fond des éléments du menu:</label>
+                            <input type="color" id="menu_color" name="menu_color" class="form-control" value="<?= htmlspecialchars($menu_color) ?>">
                         </div>
                         <div class="form-group">
-                            <label for="nav_link_hover_color">Couleur de surbrillance des liens du menu:</label>
-                            <input type="color" id="nav_link_hover_color" name="nav_link_hover_color" class="form-control" value="<?= htmlspecialchars($nav_link_hover_color) ?>">
+                            <label for="hover_color">Couleur de surbrillance des liens du menu:</label>
+                            <input type="color" id="hover_color" name="hover_color" class="form-control" value="<?= htmlspecialchars($hover_color) ?>">
                         </div>
-                        <button type="submit" class="btn btn-primary">Mettre à jour les couleurs</button>
+                        <button type="submit" class="btn btn-primary">Sauvegarder</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- CSS pour le bloc carré -->
-<style>
-    .card-body {
-        background-color: orange;
-        border-radius: 10px;
-        padding: 10px;
-    }
-
-    .card-title {
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-control {
-        text-align: center;
-    }
-</style>
 
 <?php include 'footer.php'; ?>

@@ -4,6 +4,10 @@ require_once '../backend/config.php';
 is_logged_in();
 check_inactivity();
 
+// Charger les couleurs configurées
+$menu_color = file_get_contents('../backend/menu_color.txt');
+$hover_color = file_get_contents('../backend/hover_color.txt');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['add'])) {
         $type = $_POST['type'];
@@ -42,18 +46,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
-        // Supprimer les enregistrements associés dans la table stock_reglementaire
-        $stmt = $conn->prepare("DELETE FROM stock_reglementaire WHERE article_id = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-
-        // Supprimer les enregistrements associés dans la table achats
+        // Supprimer d'abord les enregistrements associés dans la table achats
         $stmt = $conn->prepare("DELETE FROM achats WHERE article_id = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-
-        // Supprimer les enregistrements associés dans la table seance_tir
-        $stmt = $conn->prepare("DELETE FROM seance_tir WHERE arme = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
 
@@ -118,11 +112,25 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
 
 <?php include 'header.php'; ?>
 
+<style>
+    .table td {
+        word-wrap: break-word;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .action-buttons form {
+        margin: 0;
+    }
+</style>
+
 <h2>Gestion des Articles</h2>
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Numéro de Référence</th>
             <th>Type</th>
             <th>Marque</th>
             <th>Modèle</th>
@@ -135,7 +143,6 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
     <tbody>
         <?php foreach ($articles as $article): ?>
         <tr>
-            <td><?= htmlspecialchars($article['reference'] ?? '') ?></td>
             <td><?= htmlspecialchars($article['type']) ?></td>
             <td><?= htmlspecialchars($article['marque']) ?></td>
             <td><?= htmlspecialchars($article['model']) ?></td>
@@ -152,8 +159,8 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
                     <?= htmlspecialchars($article['total_boites']) ?>
                 <?php endif; ?>
             </td>
-            <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
+            <td class="action-buttons">
+                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
                 <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
                     <input type="hidden" name="id" value="<?= $article['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>

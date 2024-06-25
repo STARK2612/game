@@ -7,7 +7,8 @@ check_inactivity();
 // Calcul du total des cartouches achetées pour une séance de tir
 $stmt = $conn->prepare("SELECT SUM(nombre_munitions_tirees) AS total_cartouches_achetees FROM seance_tir WHERE stock = 'achete'");
 $stmt->execute();
-$total_cartouches_achetees = $stmt->fetch(PDO::FETCH_ASSOC)['total_cartouches_achetees'];
+$total_cartouches_achetees_data = $stmt->fetch(PDO::FETCH_ASSOC);
+$total_cartouches_achetees = $total_cartouches_achetees_data['total_cartouches_achetees'] ?? 0;
 
 // Calcul du stock total des cartouches et de la valeur totale du stock des cartouches
 $stmt = $conn->prepare("
@@ -22,13 +23,14 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$stock_total_cartouches = $result['stock_total_cartouches'];
-$valeur_totale_munitions = $result['valeur_totale_munitions'];
+$stock_total_cartouches = $result['stock_total_cartouches'] ?? 0;
+$valeur_totale_munitions = $result['valeur_totale_munitions'] ?? 0;
 
 // Calcul du total des armes
 $stmt = $conn->prepare("SELECT COUNT(*) AS total_armes FROM armes");
 $stmt->execute();
-$total_armes = $stmt->fetch(PDO::FETCH_ASSOC)['total_armes'];
+$total_armes_data = $stmt->fetch(PDO::FETCH_ASSOC);
+$total_armes = $total_armes_data['total_armes'] ?? 0;
 
 // Calcul de l'arme avec le plus de cartouches tirées
 $stmt = $conn->prepare("
@@ -44,8 +46,8 @@ $stmt = $conn->prepare("
 ");
 $stmt->execute();
 $arme_top = $stmt->fetch(PDO::FETCH_ASSOC);
-$arme_top_nom = $arme_top['marque'] . ' ' . $arme_top['model'];
-$arme_top_cartouches = $arme_top['total_cartouches_tirees'];
+$arme_top_nom = ($arme_top['marque'] ?? '') . ' ' . ($arme_top['model'] ?? '');
+$arme_top_cartouches = $arme_top['total_cartouches_tirees'] ?? 0;
 
 // Calcul du nombre d'invités et du prix total des invités pour l'année en cours
 $stmt = $conn->prepare("
@@ -60,8 +62,8 @@ $stmt = $conn->prepare("
 ");
 $stmt->execute();
 $invites_data = $stmt->fetch(PDO::FETCH_ASSOC);
-$total_invites = $invites_data['total_invites'];
-$prix_total_invites = $invites_data['prix_total_invites'];
+$total_invites = $invites_data['total_invites'] ?? 0;
+$prix_total_invites = $invites_data['prix_total_invites'] ?? 0;
 ?>
 
 <?php include 'header.php'; ?>

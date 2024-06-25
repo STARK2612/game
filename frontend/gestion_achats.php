@@ -88,7 +88,20 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'header.php'; ?>
+<style>
+    .table td {
+    word-wrap: break-word;
+}
 
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+</style>
 <h2>Gestion des Achats</h2>
 <table class="table table-bordered">
     <thead>
@@ -107,8 +120,8 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($achat['quantite']) ?></td>
             <td><?= htmlspecialchars($achat['nom']) ?></td>
             <td><?= htmlspecialchars($achat['date_achat'] ? date('d/m/Y', strtotime($achat['date_achat'])) : '') ?></td>
-            <td>
-                <form method="post" action="gestion_achats.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet achat ?');">
+            <td class="action-buttons">
+                <form method="post" action="gestion_achats.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cet achat ?');">
                     <input type="hidden" name="id" value="<?= $achat['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                 </form>

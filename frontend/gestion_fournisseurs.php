@@ -67,7 +67,20 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'header.php'; ?>
+<style>
+    .table td {
+    word-wrap: break-word;
+}
 
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+</style>
 <h2>Gestion des Fournisseurs</h2>
 <table class="table table-bordered">
     <thead>
@@ -92,9 +105,9 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($fournisseur['pays']) ?></td>
             <td><?= htmlspecialchars($fournisseur['telephone']) ?></td>
             <td><?= htmlspecialchars($fournisseur['email']) ?></td>
-            <td>
-                <button class="btn btn-sm btn-warning edit-btn" data-id="<?= $fournisseur['id'] ?>" data-nom="<?= $fournisseur['nom'] ?>" data-adresse="<?= $fournisseur['adresse'] ?>" data-code_postal="<?= $fournisseur['code_postal'] ?>" data-ville="<?= $fournisseur['ville'] ?>" data-pays="<?= $fournisseur['pays'] ?>" data-telephone="<?= $fournisseur['telephone'] ?>" data-email="<?= $fournisseur['email'] ?>">Modifier</button>
-                <form method="post" action="gestion_fournisseurs.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer ce fournisseur ?');">
+            <td class="action-buttons">
+                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $fournisseur['id'] ?>" data-nom="<?= $fournisseur['nom'] ?>" data-adresse="<?= $fournisseur['adresse'] ?>" data-code_postal="<?= $fournisseur['code_postal'] ?>" data-ville="<?= $fournisseur['ville'] ?>" data-pays="<?= $fournisseur['pays'] ?>" data-telephone="<?= $fournisseur['telephone'] ?>" data-email="<?= $fournisseur['email'] ?>">Modifier</button>
+                <form method="post" action="gestion_fournisseurs.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce fournisseur ?');">
                     <input type="hidden" name="id" value="<?= $fournisseur['id'] ?>">
                     <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                 </form>
