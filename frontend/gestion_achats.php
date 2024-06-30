@@ -102,37 +102,40 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     margin: 0;
 }
 </style>
-<h2>Gestion des Achats</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Article</th>
-            <th>Quantité</th>
-            <th>Fournisseur</th>
-            <th>Date d'Achat</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($achats as $achat): ?>
-        <tr>
-            <td><?= htmlspecialchars($achat['marque'] . ' ' . $achat['model']) ?></td>
-            <td><?= htmlspecialchars($achat['quantite']) ?></td>
-            <td><?= htmlspecialchars($achat['nom']) ?></td>
-            <td><?= htmlspecialchars($achat['date_achat'] ? date('d/m/Y', strtotime($achat['date_achat'])) : '') ?></td>
-            <td class="action-buttons">
-                <form method="post" action="gestion_achats.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cet achat ?');">
-                    <input type="hidden" name="id" value="<?= $achat['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="container">
+    <h2>Gestion des Achats</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Article</th>
+                    <th>Quantité</th>
+                    <th>Fournisseur</th>
+                    <th>Date d'Achat</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($achats as $achat): ?>
+                <tr>
+                    <td><?= htmlspecialchars($achat['marque'] . ' ' . $achat['model']) ?></td>
+                    <td><?= htmlspecialchars($achat['quantite']) ?></td>
+                    <td><?= htmlspecialchars($achat['nom']) ?></td>
+                    <td><?= htmlspecialchars($achat['date_achat'] ? date('d/m/Y', strtotime($achat['date_achat'])) : '') ?></td>
+                    <td class="action-buttons">
+                        <form method="post" action="gestion_achats.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cet achat ?');">
+                            <input type="hidden" name="id" value="<?= $achat['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-<button id="add-btn" class="btn btn-primary">Ajouter un Achat</button>
-
+    </div>
+    <button id="add-btn" class="btn btn-primary">Ajouter un Achat</button>
+</div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">

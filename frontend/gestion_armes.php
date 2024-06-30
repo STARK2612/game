@@ -126,50 +126,50 @@ $_SESSION['total_armes'] = $total_armes;
     margin-bottom: 10px;
 }
 </style>
+<div class="container">
+    <h2>Gestion des Armes</h2>
+    <div class="center-table table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Marque</th>
+                    <th>Modèle</th>
+                    <th>Prix</th>
+                    <th>Calibre</th>
+                    <th>Fournisseur</th>
+                    <th>État à l'achat</th>
+                    <th>Date d'achat</th>
+                    <th>Numéro de série</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($armes as $arme): ?>
+                <tr>
+                    <td><?= htmlspecialchars($arme['marque']) ?></td>
+                    <td><?= htmlspecialchars($arme['model']) ?></td>
+                    <td><?= htmlspecialchars($arme['prix']) ?> €</td>
+                    <td><?= htmlspecialchars($arme['calibre']) ?></td>
+                    <td><?= htmlspecialchars($arme['fournisseur_nom']) ?></td>
+                    <td><?= htmlspecialchars($arme['etat_achat']) ?></td>
+                    <td><?= !empty($arme['date_achat']) ? date('d/m/Y', strtotime($arme['date_achat'])) : '' ?></td>
+                    <td><?= htmlspecialchars($arme['num_serie']) ?></td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
+                        <form method="post" action="gestion_armes.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
+                            <input type="hidden" name="id" value="<?= $arme['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger mb-1">Supprimer</button>
+                        </form>
+                        <button class="btn btn-sm btn-info fiche-vente-btn" data-id="<?= $arme['id'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>">Vente</button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 
-<h2>Gestion des Armes</h2>
-<div class="center-table">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Marque</th>
-                <th>Modèle</th>
-                <th>Prix</th>
-                <th>Calibre</th>
-                <th>Fournisseur</th>
-                <th>État à l'achat</th>
-                <th>Date d'achat</th>
-                <th>Numéro de série</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($armes as $arme): ?>
-            <tr>
-                <td><?= htmlspecialchars($arme['marque']) ?></td>
-                <td><?= htmlspecialchars($arme['model']) ?></td>
-                <td><?= htmlspecialchars($arme['prix']) ?> €</td>
-                <td><?= htmlspecialchars($arme['calibre']) ?></td>
-                <td><?= htmlspecialchars($arme['fournisseur_nom']) ?></td>
-                <td><?= htmlspecialchars($arme['etat_achat']) ?></td>
-                <td><?= !empty($arme['date_achat']) ? date('d/m/Y', strtotime($arme['date_achat'])) : '' ?></td>
-                <td><?= htmlspecialchars($arme['num_serie']) ?></td>
-                <td class="action-buttons">
-                    <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
-                    <form method="post" action="gestion_armes.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
-                        <input type="hidden" name="id" value="<?= $arme['id'] ?>">
-                        <button type="submit" name="delete" class="btn btn-sm btn-danger mb-1">Supprimer</button>
-                    </form>
-                    <button class="btn btn-sm btn-info fiche-vente-btn" data-id="<?= $arme['id'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>">Vente</button>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+    <button id="add-btn" class="btn btn-primary">Ajouter une Arme</button>
 </div>
-
-<button id="add-btn" class="btn btn-primary">Ajouter une Arme</button>
-
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">

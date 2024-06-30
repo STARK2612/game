@@ -91,46 +91,48 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
     margin: 0;
 }
 </style>
-<h2>Gestion des Stands de Tir</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Adresse</th>
-            <th>Code Postal</th>
-            <th>Ville</th>
-            <th>Pays</th>
-            <th>Téléphone</th>
-            <th>Email</th>
-            <th>Prix par Invité</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($stands as $stand): ?>
-        <tr>
-            <td><?= htmlspecialchars($stand['nom']) ?></td>
-            <td><?= htmlspecialchars($stand['adresse']) ?></td>
-            <td><?= htmlspecialchars($stand['code_postal']) ?></td>
-            <td><?= htmlspecialchars($stand['ville']) ?></td>
-            <td><?= htmlspecialchars($stand['pays']) ?></td>
-            <td><?= htmlspecialchars($stand['telephone']) ?></td>
-            <td><?= htmlspecialchars($stand['email']) ?></td>
-            <td><?= htmlspecialchars($stand['prix_par_invite']) ?></td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
-                <form method="post" action="gestion_stands.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
-                    <input type="hidden" name="id" value="<?= $stand['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-
-<button id="add-btn" class="btn btn-primary">Ajouter un Stand</button>
-
+<div class="container">
+    <h2>Gestion des Stands de Tir</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Adresse</th>
+                    <th>Code Postal</th>
+                    <th>Ville</th>
+                    <th>Pays</th>
+                    <th>Téléphone</th>
+                    <th>Email</th>
+                    <th>Prix par Invité</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($stands as $stand): ?>
+                <tr>
+                    <td><?= htmlspecialchars($stand['nom']) ?></td>
+                    <td><?= htmlspecialchars($stand['adresse']) ?></td>
+                    <td><?= htmlspecialchars($stand['code_postal']) ?></td>
+                    <td><?= htmlspecialchars($stand['ville']) ?></td>
+                    <td><?= htmlspecialchars($stand['pays']) ?></td>
+                    <td><?= htmlspecialchars($stand['telephone']) ?></td>
+                    <td><?= htmlspecialchars($stand['email']) ?></td>
+                    <td><?= htmlspecialchars($stand['prix_par_invite']) ?></td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
+                        <form method="post" action="gestion_stands.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
+                            <input type="hidden" name="id" value="<?= $stand['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <button id="add-btn" class="btn btn-primary">Ajouter un Stand</button>
+</div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">

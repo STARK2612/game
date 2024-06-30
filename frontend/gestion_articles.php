@@ -127,51 +127,55 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
     }
 </style>
 
-<h2>Gestion des Articles</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>Marque</th>
-            <th>Modèle</th>
-            <th>Prix Unité</th>
-            <th>Valeur Stock</th>
-            <th>Stock</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($articles as $article): ?>
-        <tr>
-            <td><?= htmlspecialchars($article['type']) ?></td>
-            <td><?= htmlspecialchars($article['marque']) ?></td>
-            <td><?= htmlspecialchars($article['model']) ?></td>
-            <td><?= htmlspecialchars($article['prix_unite'] ?? '') ?> €</td>
-            <td><?= htmlspecialchars(($article['prix_unite'] ?? 0) * ($article['total_boites'] ?? 0)) ?> €</td>
-            <td>
-                <?php if ($article['type'] == 'munition' && !empty($article['cartouches_par_boite'])): ?>
-                    <?php 
-                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
-                    $boites = $article['total_boites'];
-                    ?>
-                    <?= htmlspecialchars($boites) ?> boîte(s) ou <?= htmlspecialchars($total_cartouches) ?> cartouche(s)
-                <?php else: ?>
-                    <?= htmlspecialchars($article['total_boites']) ?>
-                <?php endif; ?>
-            </td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
-                <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
-                    <input type="hidden" name="id" value="<?= $article['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+<div class="container">
+    <h2>Gestion des Articles</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Marque</th>
+                    <th>Modèle</th>
+                    <th>Prix Unité</th>
+                    <th>Valeur Stock</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($articles as $article): ?>
+                <tr>
+                    <td><?= htmlspecialchars($article['type']) ?></td>
+                    <td><?= htmlspecialchars($article['marque']) ?></td>
+                    <td><?= htmlspecialchars($article['model']) ?></td>
+                    <td><?= htmlspecialchars($article['prix_unite'] ?? '') ?> €</td>
+                    <td><?= htmlspecialchars(($article['prix_unite'] ?? 0) * ($article['total_boites'] ?? 0)) ?> €</td>
+                    <td>
+                        <?php if ($article['type'] == 'munition' && !empty($article['cartouches_par_boite'])): ?>
+                            <?php 
+                            $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                            $boites = $article['total_boites'];
+                            ?>
+                            <?= htmlspecialchars($boites) ?> boîte(s) ou <?= htmlspecialchars($total_cartouches) ?> cartouche(s)
+                        <?php else: ?>
+                            <?= htmlspecialchars($article['total_boites']) ?>
+                        <?php endif; ?>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
+                        <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
+                            <input type="hidden" name="id" value="<?= $article['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 
-<button id="add-btn" class="btn btn-primary">Ajouter un Article</button>
+    <button id="add-btn" class="btn btn-primary">Ajouter un Article</button>
+</div>
 
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">

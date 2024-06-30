@@ -90,35 +90,35 @@ $prix_total_invites = $invites_data['prix_total_invites'] ?? 0;
 
 <div class="container">
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle1">
                 Valeur Totale du Stock de cartouches: <?= number_format($valeur_totale_munitions, 2) ?> €
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle2">
                 Stock total des cartouches: <?= htmlspecialchars($stock_total_cartouches) ?> cartouche(s)
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle3">
                 Stock total d'armes: <?= htmlspecialchars($total_armes) ?> arme(s)
             </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle4">
                 Arme avec le plus de cartouches tirées: <?= htmlspecialchars($arme_top_nom) ?><br>
                 Cartouches tirées: <?= htmlspecialchars($arme_top_cartouches) ?>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle5">
                 Total des cartouches achetées pour une séance de tir: <?= htmlspecialchars($total_cartouches_achetees) ?> cartouche(s)
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="rectangle rectangle6">
                 Total des invités sur l'année: <?= htmlspecialchars($total_invites) ?><br>
                 Prix total des invités: <?= number_format($prix_total_invites, 2) ?> €

@@ -287,53 +287,54 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
     margin: 0;
 }
 </style>
-
-<h2>Gestion des Séances de Tir</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>n°ordre</th>
-            <th>Date</th>
-            <th>Heure de début</th>
-            <th>Heure de fin</th>
-            <th>Arme</th>
-            <th>Nombre de Munitions Tirées</th>
-            <th>Stock</th>
-            <th>Prix Total Cartouches Achetées (€)</th>
-            <th>Stand de Tir</th>
-            <th>Nom de l'Invité</th>
-            <th>Commentaire</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($seances as $seance): ?>
-        <tr>
-            <td><?= htmlspecialchars($seance['reference']) ?></td>
-            <td><?= date('d/m/Y', strtotime($seance['date_seance'])) ?></td>
-            <td><?= date('H:i', strtotime($seance['heure_debut'])) ?></td>
-            <td><?= date('H:i', strtotime($seance['heure_fin'])) ?></td>
-            <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
-            <td><?= htmlspecialchars($seance['nombre_munitions_tirees']) ?></td>
-            <td><?= htmlspecialchars($seance['stock']) ?></td>
-            <td><?= htmlspecialchars($seance['prix_boite']) ?> €</td>
-            <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
-            <td><?= htmlspecialchars($seance['nom_invite']) ?></td>
-            <td><?= htmlspecialchars($seance['commentaire']) ?></td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-stock="<?= $seance['stock'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-prix_boite="<?= $seance['prix_boite'] ?>" data-tarif="<?= $seance['tarif'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
-                <form method="post" action="gestion_seances.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette séance ?');">
-                    <input type="hidden" name="id" value="<?= $seance['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-
-<button id="add-btn" class="btn btn-primary">Ajouter une Séance</button>
-
+<div class="container">
+    <h2>Gestion des Séances de Tir</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>n°ordre</th>
+                    <th>Date</th>
+                    <th>Heure de début</th>
+                    <th>Heure de fin</th>
+                    <th>Arme</th>
+                    <th>Nombre de Munitions Tirées</th>
+                    <th>Stock</th>
+                    <th>Prix Total Cartouches Achetées (€)</th>
+                    <th>Stand de Tir</th>
+                    <th>Nom de l'Invité</th>
+                    <th>Commentaire</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($seances as $seance): ?>
+                <tr>
+                    <td><?= htmlspecialchars($seance['reference']) ?></td>
+                    <td><?= date('d/m/Y', strtotime($seance['date_seance'])) ?></td>
+                    <td><?= date('H:i', strtotime($seance['heure_debut'])) ?></td>
+                    <td><?= date('H:i', strtotime($seance['heure_fin'])) ?></td>
+                    <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
+                    <td><?= htmlspecialchars($seance['nombre_munitions_tirees']) ?></td>
+                    <td><?= htmlspecialchars($seance['stock']) ?></td>
+                    <td><?= htmlspecialchars($seance['prix_boite']) ?> €</td>
+                    <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
+                    <td><?= htmlspecialchars($seance['nom_invite']) ?></td>
+                    <td><?= htmlspecialchars($seance['commentaire']) ?></td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-stock="<?= $seance['stock'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-prix_boite="<?= $seance['prix_boite'] ?>" data-tarif="<?= $seance['tarif'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
+                        <form method="post" action="gestion_seances.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette séance ?');">
+                            <input type="hidden" name="id" value="<?= $seance['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <button id="add-btn" class="btn btn-primary">Ajouter une Séance</button>
+</div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">

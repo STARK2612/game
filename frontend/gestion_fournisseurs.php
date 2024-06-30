@@ -81,44 +81,46 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     margin: 0;
 }
 </style>
-<h2>Gestion des Fournisseurs</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Adresse</th>
-            <th>Code Postal</th>
-            <th>Ville</th>
-            <th>Pays</th>
-            <th>Téléphone</th>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($fournisseurs as $fournisseur): ?>
-        <tr>
-            <td><?= htmlspecialchars($fournisseur['nom']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['adresse']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['code_postal']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['ville']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['pays']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['telephone']) ?></td>
-            <td><?= htmlspecialchars($fournisseur['email']) ?></td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $fournisseur['id'] ?>" data-nom="<?= $fournisseur['nom'] ?>" data-adresse="<?= $fournisseur['adresse'] ?>" data-code_postal="<?= $fournisseur['code_postal'] ?>" data-ville="<?= $fournisseur['ville'] ?>" data-pays="<?= $fournisseur['pays'] ?>" data-telephone="<?= $fournisseur['telephone'] ?>" data-email="<?= $fournisseur['email'] ?>">Modifier</button>
-                <form method="post" action="gestion_fournisseurs.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce fournisseur ?');">
-                    <input type="hidden" name="id" value="<?= $fournisseur['id'] ?>">
-                    <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-
-<button id="add-btn" class="btn btn-primary">Ajouter un Fournisseur</button>
-
+<div class="container">
+    <h2>Gestion des Fournisseurs</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Adresse</th>
+                    <th>Code Postal</th>
+                    <th>Ville</th>
+                    <th>Pays</th>
+                    <th>Téléphone</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($fournisseurs as $fournisseur): ?>
+                <tr>
+                    <td><?= htmlspecialchars($fournisseur['nom']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['adresse']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['code_postal']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['ville']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['pays']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['telephone']) ?></td>
+                    <td><?= htmlspecialchars($fournisseur['email']) ?></td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $fournisseur['id'] ?>" data-nom="<?= $fournisseur['nom'] ?>" data-adresse="<?= $fournisseur['adresse'] ?>" data-code_postal="<?= $fournisseur['code_postal'] ?>" data-ville="<?= $fournisseur['ville'] ?>" data-pays="<?= $fournisseur['pays'] ?>" data-telephone="<?= $fournisseur['telephone'] ?>" data-email="<?= $fournisseur['email'] ?>">Modifier</button>
+                        <form method="post" action="gestion_fournisseurs.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce fournisseur ?');">
+                            <input type="hidden" name="id" value="<?= $fournisseur['id'] ?>">
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <button id="add-btn" class="btn btn-primary">Ajouter un Fournisseur</button>
+</div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
