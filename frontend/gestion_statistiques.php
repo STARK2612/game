@@ -48,10 +48,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
                 $params[':date_debut'] = $date_debut;
                 $params[':date_fin'] = $date_fin;
-            } elseif ($periode == 'mois') {
-                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
-            } elseif ($periode == 'annee') {
-                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
             }
 
             if ($periode == 'mois') {
@@ -92,10 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
                 $params[':date_debut'] = $date_debut;
                 $params[':date_fin'] = $date_fin;
-            } elseif ($periode == 'mois') {
-                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
-            } elseif ($periode == 'annee') {
-                $query .= " AND YEAR(seance_tir.date_seance) = YEAR(CURDATE())";
             }
 
             if ($periode == 'mois') {
@@ -181,6 +173,7 @@ function getMonthName($monthNumber) {
                     <tr>
                         <?php if ($periode == 'mois'): ?>
                             <th>Mois</th>
+                            <th>Année</th>
                         <?php elseif ($periode == 'annee'): ?>
                             <th>Année</th>
                         <?php elseif ($periode == 'semaine'): ?>
@@ -206,6 +199,7 @@ function getMonthName($monthNumber) {
                         <tr>
                             <?php if ($periode == 'mois'): ?>
                                 <td><?= htmlspecialchars($periodName) ?></td>
+                                <td><?= htmlspecialchars($seance['annee']) ?></td>
                             <?php elseif ($periode == 'annee'): ?>
                                 <td><?= htmlspecialchars($periodName) ?></td>
                             <?php elseif ($periode == 'semaine'): ?>
@@ -232,6 +226,7 @@ function getMonthName($monthNumber) {
                     <tr>
                         <?php if ($periode == 'mois'): ?>
                             <th>Mois</th>
+                            <th>Année</th>
                         <?php elseif ($periode == 'annee'): ?>
                             <th>Année</th>
                         <?php elseif ($periode == 'semaine'): ?>
@@ -258,6 +253,7 @@ function getMonthName($monthNumber) {
                         <tr>
                             <?php if ($periode == 'mois'): ?>
                                 <td><?= htmlspecialchars($periodName) ?></td>
+                                <td><?= htmlspecialchars($seance['annee']) ?></td>
                             <?php elseif ($periode == 'annee'): ?>
                                 <td><?= htmlspecialchars($periodName) ?></td>
                             <?php elseif ($periode == 'semaine'): ?>
@@ -271,7 +267,7 @@ function getMonthName($monthNumber) {
                     <?php endforeach; ?>
                     <!-- Ligne de total -->
                     <tr>
-                        <td colspan="<?php if ($periode == 'mois' || $periode == 'annee') { echo '2'; } else { echo '2'; } ?>"><strong>Total</strong></td>
+                        <td colspan="<?php if ($periode == 'mois' || $periode == 'annee') { echo '3'; } else { echo '2'; } ?>"><strong>Total</strong></td>
                         <td><strong><?= htmlspecialchars($totalInvites) ?></strong></td>
                         <td><strong><?= htmlspecialchars($totalSeances) ?></strong></td>
                         <td><strong><?= number_format($totalPrixInvite, 2) ?> €</strong></td>
