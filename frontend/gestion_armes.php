@@ -99,35 +99,10 @@ $_SESSION['total_armes'] = $total_armes;
 
 <?php include 'header.php'; ?>
 
-<style>
-.table td {
-    word-wrap: break-word;
-    max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
-}
-
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-}
-
-.action-buttons form {
-    margin: 0;
-}
-.red-block {
-    background-color: #f8d7da;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-.green-block {
-    background-color: #d4edda;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-</style>
 <div class="container">
-    <h2>Gestion des Armes</h2>
+    <h2>Gestion des Armes 
+        <button id="add-btn" class="btn btn-primary">Ajouter une Arme</button>
+    </h2>
     <div class="center-table table-responsive">
         <table class="table table-bordered">
             <thead>
@@ -167,8 +142,6 @@ $_SESSION['total_armes'] = $total_armes;
             </tbody>
         </table>
     </div>
-
-    <button id="add-btn" class="btn btn-primary">Ajouter une Arme</button>
 </div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">

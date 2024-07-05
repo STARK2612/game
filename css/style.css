@@ -116,8 +116,54 @@ form {
     text-align: center;
 }
 
-.table td {
-    word-wrap: break-word;
-    max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
-    white-space: pre-wrap; /* Cette propriété assure que les espaces sont respectés et le texte s'affiche correctement */
+/* Styles supplémentaires extraits des fichiers PHP */
+.table {
+    width: auto; /* Adjust width to fit content */
+    table-layout: auto; /* Adjust column width based on content */
+    overflow-x: auto; /* Add horizontal scroll if needed */
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    display: none;
+}
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    display: none;
+}
+.table th:nth-child(11),
+.table td:nth-child(11) {
+    display: none;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+
+.red-block {
+    background-color: #f8d7da;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.green-block {
+    background-color: #d4edda;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.title-button-container {
+    display: flex;
+    align-items: center;
+}
+
+.title-button-container h2 {
+    margin-right: 10px;
 }

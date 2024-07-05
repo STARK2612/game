@@ -77,22 +77,11 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'header.php'; ?>
-<style>
-    .table td {
-    word-wrap: break-word;
-}
 
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-}
-
-.action-buttons form {
-    margin: 0;
-}
-</style>
 <div class="container">
-    <h2>Gestion des Stands de Tir</h2>
+    <h2>Gestion des Stands de Tir
+        <button id="add-btn" class="btn btn-primary">Ajouter un Stand</button>
+    </h2>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
@@ -131,7 +120,6 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </tbody>
         </table>
     </div>
-    <button id="add-btn" class="btn btn-primary">Ajouter un Stand</button>
 </div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">

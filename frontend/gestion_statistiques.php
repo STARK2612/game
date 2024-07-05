@@ -127,7 +127,10 @@ function getMonthName($monthNumber) {
 <?php include 'header.php'; ?>
 
 <div class="container">
-    <h2>Statistiques</h2>
+    <h2>Statistiques 
+        <button id="generate-pdf" class="btn btn-outline-primary btn-sm">Générer PDF</button>
+        <button type="submit" form="stats-form" class="btn btn-primary">Afficher les statistiques</button>
+    </h2>
 
     <?php if (!empty($errors)): ?>
         <div class="alert alert-danger">
@@ -137,7 +140,7 @@ function getMonthName($monthNumber) {
         </div>
     <?php endif; ?>
 
-    <form method="post" action="gestion_statistiques.php">
+    <form id="stats-form" method="post" action="gestion_statistiques.php">
         <div class="form-group">
             <label for="categorie">Catégorie:</label>
             <select id="categorie" name="categorie" class="form-control" required>
@@ -161,14 +164,12 @@ function getMonthName($monthNumber) {
             <label for="date_fin">Date de fin:</label>
             <input type="date" id="date_fin" name="date_fin" class="form-control">
         </div>
-        <button type="submit" class="btn btn-primary">Afficher les statistiques</button>
-        <button type="button" class="btn btn-secondary" onclick="printTable()">Imprimer le tableau</button>
     </form>
 
     <?php if (isset($seances) && $categorie == 'armes'): ?>
         <h3>Résultats pour les Armes</h3>
         <div id="stat-table" class="table-responsive">
-            <table class="table table-bordered">
+            <table class="table table-bordered" id="statistiquesTable">
                 <thead>
                     <tr>
                         <?php if ($periode == 'mois'): ?>
@@ -221,7 +222,7 @@ function getMonthName($monthNumber) {
     <?php elseif (isset($seances) && $categorie == 'invites'): ?>
         <h3>Résultats pour les Invités</h3>
         <div id="stat-table" class="table-responsive">
-            <table class="table table-bordered">
+            <table class="table table-bordered" id="statistiquesTable">
                 <thead>
                     <tr>
                         <?php if ($periode == 'mois'): ?>
@@ -278,6 +279,8 @@ function getMonthName($monthNumber) {
     <?php endif; ?>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -311,23 +314,48 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function printTable() {
-    var tableContents = document.getElementById('stat-table').innerHTML;
-    var printWindow = window.open('', '', 'height=800,width=1200');
-    printWindow.document.write('<html><head><title>Statistiques</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write('table {width: 100%; border-collapse: collapse;}');
-    printWindow.document.write('th, td {border: 1px solid black; padding: 10px; text-align: left;}');
-    printWindow.document.write('thead {display: table-header-group;}');
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(tableContents);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-}
+document.getElementById('generate-pdf').addEventListener('click', function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape');
+
+    // Add title
+    doc.text("Statistiques", 14, 10);
+
+    // Get data from table
+    const table = document.getElementById('statistiquesTable');
+    const headers = [];
+    const data = [];
+    const excludedColumns = []; // Add indexes of columns you want to exclude
+
+    // Get headers
+    table.querySelectorAll('thead th').forEach((th, index) => {
+        if (!excludedColumns.includes(index)) {
+            headers.push(th.innerText);
+        }
+    });
+
+    // Get rows
+    table.querySelectorAll('tbody tr').forEach(row => {
+        const rowData = [];
+        row.querySelectorAll('td').forEach((td, index) => {
+            if (!excludedColumns.includes(index)) {
+                rowData.push(td.innerText);
+            }
+        });
+        data.push(rowData);
+    });
+
+    // Add table to PDF
+    doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 20,
+        styles: { fontSize: 8 }
+    });
+
+    // Open in new tab
+    window.open(doc.output('bloburl'), '_blank');
+});
 </script>
 
 <?php include 'footer.php'; ?>

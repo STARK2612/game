@@ -272,37 +272,25 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php include 'header.php'; ?>
 
-<style>
-.table td {
-    word-wrap: break-word;
-    max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
-}
-
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-}
-
-.action-buttons form {
-    margin: 0;
-}
-</style>
 <div class="container">
-    <h2>Gestion des Séances de Tir</h2>
+    <h2>Gestion des Séances de Tir 
+        <button id="generate-pdf" class="btn btn-outline-primary btn-sm">Générer PDF</button>
+        <button id="add-btn" class="btn btn-primary">Ajouter une Séance</button>
+    </h2>
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="seancesTable">
             <thead>
                 <tr>
                     <th>n°ordre</th>
-                    <th>Date</th>
-                    <th>Heure de début</th>
-                    <th>Heure de fin</th>
+                    <th>Date <button class="btn btn-sm btn-outline-secondary" onclick="sortTableByDate('asc')">⬆️</button> <button class="btn btn-sm btn-outline-secondary" onclick="sortTableByDate('desc')">⬇️</button></th>
+                    <th>Début</th>
+                    <th>Fin</th>
                     <th>Arme</th>
-                    <th>Nombre de Munitions Tirées</th>
+                    <th>Mun Tirées</th>
                     <th>Stock</th>
-                    <th>Prix Total Cartouches Achetées (€)</th>
+                    <th>Total(€)</th>
                     <th>Stand de Tir</th>
-                    <th>Nom de l'Invité</th>
+                    <th>Invité</th>
                     <th>Commentaire</th>
                     <th>Actions</th>
                 </tr>
@@ -333,8 +321,8 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </tbody>
         </table>
     </div>
-    <button id="add-btn" class="btn btn-primary">Ajouter une Séance</button>
 </div>
+
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -490,6 +478,8 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -564,7 +554,70 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-tarif_group').style.display = 'block';
         }
     });
+
+    document.getElementById('generate-pdf').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+
+        // Add title
+        doc.text("Gestion des Séances de Tir", 14, 10);
+
+        // Get data from table
+        const table = document.getElementById('seancesTable');
+        const headers = [];
+        const data = [];
+        const excludedColumns = [11]; // Exclude 'Actions' column
+
+        // Get headers
+        table.querySelectorAll('thead th').forEach((th, index) => {
+            if (!excludedColumns.includes(index)) {
+                headers.push(th.innerText);
+            }
+        });
+
+        // Get rows
+        table.querySelectorAll('tbody tr').forEach(row => {
+            const rowData = [];
+            row.querySelectorAll('td').forEach((td, index) => {
+                if (!excludedColumns.includes(index)) {
+                    rowData.push(td.innerText);
+                }
+            });
+            data.push(rowData);
+        });
+
+        // Add table to PDF
+        doc.autoTable({
+            head: [headers],
+            body: data,
+            startY: 20,
+            styles: { fontSize: 8 }
+        });
+
+        // Open in new tab
+        window.open(doc.output('bloburl'), '_blank');
+    });
 });
+
+function sortTableByDate(order) {
+    var table = document.getElementById('seancesTable').getElementsByTagName('tbody')[0];
+    var rows = Array.prototype.slice.call(table.rows, 0);
+
+    rows.sort(function(a, b) {
+        var dateA = new Date(a.cells[1].innerText.split('/').reverse().join('-'));
+        var dateB = new Date(b.cells[1].innerText.split('/').reverse().join('-'));
+
+        if (order === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    rows.forEach(function(row) {
+        table.appendChild(row);
+    });
+}
 </script>
 
 <?php include 'footer.php'; ?>

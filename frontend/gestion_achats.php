@@ -88,22 +88,11 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'header.php'; ?>
-<style>
-    .table td {
-    word-wrap: break-word;
-}
 
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-}
-
-.action-buttons form {
-    margin: 0;
-}
-</style>
 <div class="container">
-    <h2>Gestion des Achats</h2>
+    <h2>Gestion des Achats 
+        <button id="add-btn" class="btn btn-primary">Ajouter un Achat</button>
+    </h2>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
@@ -134,7 +123,6 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </table>
 
     </div>
-    <button id="add-btn" class="btn btn-primary">Ajouter un Achat</button>
 </div>
 <!-- Modal Ajouter -->
 <div id="add-modal" class="modal fade" tabindex="-1" role="dialog">

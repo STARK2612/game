@@ -46,7 +46,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
-        // Supprimer d'abord les enregistrements associés dans la table achats
+        // Supprimer d'abord les enregistrements associés dans la table stock_reglementaire
+        $stmt = $conn->prepare("DELETE FROM stock_reglementaire WHERE article_id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        // Supprimer les enregistrements associés dans la table achats
         $stmt = $conn->prepare("DELETE FROM achats WHERE article_id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -112,23 +117,10 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
 
 <?php include 'header.php'; ?>
 
-<style>
-    .table td {
-        word-wrap: break-word;
-    }
-
-    .action-buttons {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .action-buttons form {
-        margin: 0;
-    }
-</style>
-
 <div class="container">
-    <h2>Gestion des Articles</h2>
+    <h2>Gestion des Munitions 
+        <button id="add-btn" class="btn btn-primary">Ajouter munition</button>
+    </h2>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
@@ -173,8 +165,6 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
             </tbody>
         </table>
     </div>
-
-    <button id="add-btn" class="btn btn-primary">Ajouter un Article</button>
 </div>
 
 <!-- Modal Ajouter -->
@@ -194,8 +184,6 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
                         <select id="type" name="type" class="form-control" required>
                             <option value="" disabled selected>Sélectionner un type d'article</option>
                             <option value="munition">Munition</option>
-                            <option value="consommable">Consommable</option>
-                            <option value="fixe">Fixe</option>
                         </select>
                     </div>
                     <div class="form-group" id="cartouches_par_boite_group" style="display: none;">
@@ -239,8 +227,6 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
                         <select id="edit-type" name="type" class="form-control" required>
                             <option value="" disabled selected>Sélectionner un type d'article</option>
                             <option value="munition">Munition</option>
-                            <option value="consommable">Consommable</option>
-                            <option value="fixe">Fixe</option>
                         </select>
                     </div>
                     <div class="form-group" id="edit-cartouches_par_boite_group" style="display: none;">

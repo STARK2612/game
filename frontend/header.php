@@ -40,7 +40,7 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
             <nav>
                 <ul class="nav">
                     <li class="nav-item"><a class="nav-link text-white" href="dashboard.php">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="gestion_articles.php">Articles</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="gestion_articles.php">Munitions</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_achats.php">Achats</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_armes.php">Armes</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_seances.php">Séances de Tir</a></li>
