@@ -1,10 +1,16 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+
     if (isset($_POST['add'])) {
         $nom = $_POST['nom'];
         $adresse = $_POST['adresse'];
@@ -100,6 +106,7 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $fournisseur['id'] ?>" data-nom="<?= $fournisseur['nom'] ?>" data-adresse="<?= $fournisseur['adresse'] ?>" data-code_postal="<?= $fournisseur['code_postal'] ?>" data-ville="<?= $fournisseur['ville'] ?>" data-pays="<?= $fournisseur['pays'] ?>" data-telephone="<?= $fournisseur['telephone'] ?>" data-email="<?= $fournisseur['email'] ?>">Modifier</button>
                         <form method="post" action="gestion_fournisseurs.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce fournisseur ?');">
                             <input type="hidden" name="id" value="<?= $fournisseur['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </td>
@@ -121,6 +128,7 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_fournisseurs.php">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="nom">Nom:</label>
                         <input type="text" id="nom" name="nom" class="form-control" required>
@@ -169,6 +177,7 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="modal-body">
                 <form method="post" action="gestion_fournisseurs.php">
                     <input type="hidden" id="edit-id" name="id">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="edit-nom">Nom:</label>
                         <input type="text" id="edit-nom" name="nom" class="form-control" required>

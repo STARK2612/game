@@ -1,10 +1,16 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+
     if (isset($_POST['add'])) {
         $marque = $_POST['marque'];
         $model = $_POST['model'];
@@ -133,6 +139,7 @@ $_SESSION['total_armes'] = $total_armes;
                         <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $arme['id'] ?>" data-marque="<?= $arme['marque'] ?>" data-model="<?= $arme['model'] ?>" data-prix="<?= $arme['prix'] ?>" data-calibre="<?= $arme['calibre'] ?>" data-fournisseur="<?= $arme['fournisseur'] ?>" data-etat_achat="<?= $arme['etat_achat'] ?>" data-date_achat="<?= $arme['date_achat'] ?>" data-num_serie="<?= $arme['num_serie'] ?>" data-date_revente="<?= $arme['date_revente'] ?>" data-prix_revente="<?= $arme['prix_revente'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>" data-prix_reparation="<?= $arme['prix_reparation'] ?>">Modifier</button>
                         <form method="post" action="gestion_armes.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette arme ?');">
                             <input type="hidden" name="id" value="<?= $arme['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger mb-1">Supprimer</button>
                         </form>
                         <button class="btn btn-sm btn-info fiche-vente-btn" data-id="<?= $arme['id'] ?>" data-etat_revente="<?= $arme['etat_revente'] ?>" data-date_reparation="<?= $arme['date_reparation'] ?>">Vente</button>
@@ -155,6 +162,7 @@ $_SESSION['total_armes'] = $total_armes;
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_armes.php">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="marque">Marque:</label>
                         <input type="text" id="marque" name="marque" class="form-control" required>
@@ -246,6 +254,7 @@ $_SESSION['total_armes'] = $total_armes;
             <div class="modal-body">
                 <form method="post" action="gestion_armes.php">
                     <input type="hidden" id="edit-id" name="id">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="edit-marque">Marque:</label>
                         <input type="text" id="edit-marque" name="marque" class="form-control" required>

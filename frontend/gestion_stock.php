@@ -1,6 +1,8 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
@@ -48,6 +50,7 @@ $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <h2>Gestion du Stock</h2>
 
 <form method="post" action="gestion_stock.php">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
     <div class="form-group">
         <label for="type_stock">Sélectionner le type de stock:</label>
         <select id="type_stock" name="type_stock" class="form-control" required>

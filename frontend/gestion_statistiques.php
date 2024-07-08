@@ -195,7 +195,7 @@ function getMonthName($monthNumber) {
                     foreach ($seances as $seance):
                         $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
                         $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
-                        $totalDesPrix = $seance['prix_arme'] + $seance['prix_total_cartouches_achetees'] + $seance['prix_reparation'];
+                        $totalDesPrix = ($seance['prix_arme'] ?? 0) + ($seance['prix_total_cartouches_achetees'] ?? 0) + ($seance['prix_reparation'] ?? 0);
                     ?>
                         <tr>
                             <?php if ($periode == 'mois'): ?>
@@ -207,11 +207,11 @@ function getMonthName($monthNumber) {
                                 <td><?= htmlspecialchars($periodName) ?></td>
                             <?php endif; ?>
                             <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
-                            <td><?= number_format($seance['prix_arme'], 2) ?> €</td>
+                            <td><?= number_format($seance['prix_arme'] ?? 0, 2) ?> €</td>
                             <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
                             <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
-                            <td><?= number_format($seance['prix_total_cartouches_achetees'], 2) ?> €</td>
-                            <td><?= number_format($seance['prix_reparation'], 2) ?> €</td>
+                            <td><?= number_format($seance['prix_total_cartouches_achetees'] ?? 0, 2) ?> €</td>
+                            <td><?= number_format($seance['prix_reparation'] ?? 0, 2) ?> €</td>
                             <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
                             <td><?= number_format($totalDesPrix, 2) ?> €</td>
                         </tr>
@@ -263,7 +263,7 @@ function getMonthName($monthNumber) {
                             <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
                             <td><?= htmlspecialchars($seance['nombre_invites']) ?></td>
                             <td><?= htmlspecialchars($seance['nombre_seances']) ?></td>
-                            <td><?= number_format($seance['prix_total_invite'], 2) ?> €</td>
+                            <td><?= number_format($seance['prix_total_invite'] ?? 0, 2) ?> €</td>
                         </tr>
                     <?php endforeach; ?>
                     <!-- Ligne de total -->
@@ -271,7 +271,7 @@ function getMonthName($monthNumber) {
                         <td colspan="<?php if ($periode == 'mois' || $periode == 'annee') { echo '3'; } else { echo '2'; } ?>"><strong>Total</strong></td>
                         <td><strong><?= htmlspecialchars($totalInvites) ?></strong></td>
                         <td><strong><?= htmlspecialchars($totalSeances) ?></strong></td>
-                        <td><strong><?= number_format($totalPrixInvite, 2) ?> €</strong></td>
+                        <td><strong><?= number_format($totalPrixInvite ?? 0, 2) ?> €</strong></td>
                     </tr>
                 </tbody>
             </table>

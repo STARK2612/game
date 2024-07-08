@@ -1,10 +1,16 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+
     if (isset($_POST['add'])) {
         $nom = $_POST['nom'];
         $adresse = $_POST['adresse'];
@@ -112,6 +118,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $stand['id'] ?>" data-nom="<?= $stand['nom'] ?>" data-adresse="<?= $stand['adresse'] ?>" data-code_postal="<?= $stand['code_postal'] ?>" data-ville="<?= $stand['ville'] ?>" data-pays="<?= $stand['pays'] ?>" data-telephone="<?= $stand['telephone'] ?>" data-email="<?= $stand['email'] ?>" data-prix_par_invite="<?= $stand['prix_par_invite'] ?>">Modifier</button>
                         <form method="post" action="gestion_stands.php" onsubmit="return confirm('Voulez-vous vraiment supprimer ce stand de tir ?');">
                             <input type="hidden" name="id" value="<?= $stand['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </td>
@@ -133,6 +140,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_stands.php">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="nom">Nom:</label>
                         <input type="text" id="nom" name="nom" class="form-control" required>
@@ -185,6 +193,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="modal-body">
                 <form method="post" action="gestion_stands.php">
                     <input type="hidden" id="edit-id" name="id">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="edit-nom">Nom:</label>
                         <input type="text" id="edit-nom" name="nom" class="form-control" required>

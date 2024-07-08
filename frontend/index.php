@@ -1,27 +1,38 @@
 <?php
-session_start();
+require_once '../backend/session.php';
 require_once '../backend/config.php';
 require_once '../backend/csrf.php';
 
-if (isset($_SESSION['user_id'])) {
+// Vérifiez si l'utilisateur est connecté
+if (is_logged_in()) {
     header("Location: dashboard.php");
     exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && validate_csrf($_POST['csrf_token'])) {
-    $identifiant = $_POST['identifiant'];
-    $password = $_POST['mot_de_passe'];
+// Gestion de la soumission du formulaire de connexion
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
 
+    $identifiant = $_POST['identifiant'];
+    $mot_de_passe = $_POST['mot_de_passe'];
+
+    // Requête pour vérifier les informations d'identification
     $stmt = $conn->prepare("SELECT * FROM utilisateurs WHERE identifiant = :identifiant");
     $stmt->bindParam(':identifiant', $identifiant);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($user && password_verify($password, $user['mot_de_passe'])) {
+    // Vérifier le mot de passe
+    if ($user && password_verify($mot_de_passe, $user['mot_de_passe'])) {
+        // Définir les variables de session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_role'] = $user['role'];
-        $_SESSION['user_name'] = $user['prenom'] . ' ' . $user['nom'];
-        $_SESSION['last_activity'] = time();
+        $_SESSION['user_firstname'] = $user['prenom'];
+        $_SESSION['user_name'] = $user['nom'];
+
+        // Rediriger vers le tableau de bord
         header("Location: dashboard.php");
         exit;
     } else {
@@ -29,43 +40,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && validate_csrf($_POST['csrf_token']))
     }
 }
 
-$csrf_token = generate_csrf();
+// Charger la couleur de fond configurée
+$background_color_file = '../backend/background_color.txt';
+$background_color = '#f4f4f4'; // Couleur par défaut
+if (file_exists($background_color_file)) {
+    $background_color = file_get_contents($background_color_file);
+}
+
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gestionnaire d'armes - Connexion</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background-color: <?= htmlspecialchars($background_color) ?>;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Connexion</h2>
-                    </div>
-                    <div class="card-body">
-                        <?php if (isset($error)): ?>
-                            <div class="alert alert-danger"><?= $error ?></div>
-                        <?php endif; ?>
-                        <form method="post" action="index.php">
-                            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
-                            <div class="form-group">
-                                <label for="identifiant">Identifiant:</label>
-                                <input type="text" id="identifiant" name="identifiant" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="mot_de_passe">Mot de passe:</label>
-                                <input type="password" id="mot_de_passe" name="mot_de_passe" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Connexion</button>
-                        </form>
-                    </div>
+    <div class="container">
+        <div class="login-container">
+            <form method="post" action="index.php">
+                <h2>Connexion</h2>
+                <?php if (isset($error)): ?>
+                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+                <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
+                <div class="form-group">
+                    <label for="identifiant">Identifiant:</label>
+                    <input type="text" id="identifiant" name="identifiant" class="form-control" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="mot_de_passe">Mot de passe:</label>
+                    <input type="password" id="mot_de_passe" name="mot_de_passe" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Connexion</button>
+            </form>
         </div>
     </div>
 </body>

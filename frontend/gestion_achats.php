@@ -1,10 +1,16 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+    
     if (isset($_POST['add'])) {
         $article_id = $_POST['article'];
         $quantite = $_POST['quantite'];
@@ -114,6 +120,7 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <td class="action-buttons">
                         <form method="post" action="gestion_achats.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cet achat ?');">
                             <input type="hidden" name="id" value="<?= $achat['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </td>
@@ -136,6 +143,7 @@ $fournisseurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_achats.php">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="article">Article:</label>
                         <select id="article" name="article" class="form-control" required>

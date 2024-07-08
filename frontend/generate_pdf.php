@@ -41,12 +41,12 @@ $pdf->AddFont('DejaVuSans', 'BI', 'DejaVuSans-BoldOblique.php');
 
 // Titre
 $pdf->SetFont('DejaVuSans', 'B', 32);
-$pdf->Cell(0, 15, utf8_decode('Fiche de Vente'), 1, 1, 'C');
+$pdf->Cell(0, 15, mb_convert_encoding('Fiche de Vente', 'ISO-8859-1', 'UTF-8'), 1, 1, 'C');
 $pdf->Ln(10);
 
 // Section d'informations sur l'arme
 $pdf->SetFont('DejaVuSans', '', 12);
-$pdf->Cell(0, 4, utf8_decode('Informations sur l\'arme:'), 0, 1, 'L');
+$pdf->Cell(0, 4, mb_convert_encoding('Informations sur l\'arme:', 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
 $pdf->Ln(2);
 
 // Cadre pour les informations sur l'arme
@@ -54,65 +54,65 @@ $pdf->Cell(0, 80, '', 1, 1); // Cadre extérieur
 
 $pdf->SetY(40);
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Marque: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['marque']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Marque: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['marque'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Modèle: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['model']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Modèle: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['model'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Prix d\'achat: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['prix'] . ' Euros'), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Prix d\'achat: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['prix'] . ' Euros', 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Calibre: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['calibre']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Calibre: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['calibre'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Fournisseur: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['fournisseur_nom']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Fournisseur: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['fournisseur_nom'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('État à l\'achat: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['etat_achat']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('État à l\'achat: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['etat_achat'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Date d\'achat: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode(date('d/m/Y', strtotime($arme['date_achat']))), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Date d\'achat: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding(date('d/m/Y', strtotime($arme['date_achat'])), 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Numéro de série: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($arme['num_serie']), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Numéro de série: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($arme['num_serie'], 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 // Cadre pour les détails d'utilisation et réparations
 $pdf->Cell(0, 60, '', 1, 1); // Cadre extérieur
 
 $pdf->SetY(125);
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Total des cartouches tirées: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($total_cartouches), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Total des cartouches tirées: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($total_cartouches, 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 $pdf->SetX(10);
-$pdf->Cell(60, 10, utf8_decode('Total des réparations: '), 0, 0);
-$pdf->Cell(60, 10, utf8_decode($total_reparations . ' Euros'), 0, 1);
+$pdf->Cell(60, 10, mb_convert_encoding('Total des réparations: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+$pdf->Cell(60, 10, mb_convert_encoding($total_reparations . ' Euros', 'ISO-8859-1', 'UTF-8'), 0, 1);
 
 if (!empty($arme['date_revente'])) {
     $pdf->SetX(10);
-    $pdf->Cell(60, 10, utf8_decode('Date de revente: '), 0, 0);
-    $pdf->Cell(60, 10, utf8_decode(date('d/m/Y', strtotime($arme['date_revente']))), 0, 1);
+    $pdf->Cell(60, 10, mb_convert_encoding('Date de revente: ', 'ISO-8859-1', 'UTF-8'), 0, 0);
+    $pdf->Cell(60, 10, mb_convert_encoding(date('d/m/Y', strtotime($arme['date_revente'])), 'ISO-8859-1', 'UTF-8'), 0, 1);
 }
 
 if (!empty($arme['prix_revente'])) {
     $pdf->SetFont('DejaVuSans', 'B', 16);
     $pdf->SetX(45);
-    $pdf->Cell(60, 15, utf8_decode('Prix de revente: '), 1, 0);
-    $pdf->Cell(60, 15, utf8_decode($arme['prix_revente'] . ' Euros'), 1, 1);
+    $pdf->Cell(60, 15, mb_convert_encoding('Prix de revente: ', 'ISO-8859-1', 'UTF-8'), 1, 0);
+    $pdf->Cell(60, 15, mb_convert_encoding($arme['prix_revente'] . ' Euros', 'ISO-8859-1', 'UTF-8'), 1, 1);
 }
 
 // Section de signatures
 $pdf->Ln(15);
-$pdf->Cell(0, 10, utf8_decode(''), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding('', 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
 $pdf->Ln(2);
 
 // Cadre pour les signatures
@@ -125,8 +125,8 @@ $pdf->Cell(90, 40, '', 1, 1); // Cadre pour signature acheteur
 
 $pdf->SetY(200);
 $pdf->SetX(15);
-$pdf->Cell(90, 10, utf8_decode('Signature vendeur'), 0, 0, 'C');
-$pdf->Cell(90, 10, utf8_decode('Signature acheteur'), 0, 1, 'C');
+$pdf->Cell(90, 10, mb_convert_encoding('Signature vendeur', 'ISO-8859-1', 'UTF-8'), 0, 0, 'C');
+$pdf->Cell(90, 10, mb_convert_encoding('Signature acheteur', 'ISO-8859-1', 'UTF-8'), 0, 1, 'C');
 
 // En-têtes pour afficher le PDF dans un nouvel onglet
 header('Content-Type: application/pdf');

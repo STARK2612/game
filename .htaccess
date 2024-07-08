@@ -1,7 +1,15 @@
+# Désactiver l'indexation des répertoires
 Options -Indexes
-RewriteEngine On
-RewriteBase /game/
 
+# Activer le moteur de réécriture
+RewriteEngine On
+RewriteBase /
+
+# Ne pas réécrire les fichiers et répertoires existants
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.+)$ frontend/index.php [L,QSA]
+
+
+
+# Rediriger toutes les autres demandes vers index.php
+RewriteRule ^(.*)$ frontend/index.php [L,QSA]

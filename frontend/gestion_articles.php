@@ -1,6 +1,8 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
 is_logged_in();
 check_inactivity();
 
@@ -9,6 +11,10 @@ $menu_color = file_get_contents('../backend/menu_color.txt');
 $hover_color = file_get_contents('../backend/hover_color.txt');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!validate_csrf($_POST['csrf_token'])) {
+        die("Invalid CSRF token.");
+    }
+
     if (isset($_POST['add'])) {
         $type = $_POST['type'];
         $prix_unite = $_POST['prix_unite'];
@@ -157,6 +163,7 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
                         <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $article['id'] ?>" data-type="<?= $article['type'] ?>" data-prix_unite="<?= $article['prix_unite'] ?? '' ?>" data-marque="<?= $article['marque'] ?>" data-model="<?= $article['model'] ?>" data-cartouches_par_boite="<?= $article['cartouches_par_boite'] ?? '' ?>">Modifier</button>
                         <form method="post" action="gestion_articles.php" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cet article ?');">
                             <input type="hidden" name="id" value="<?= $article['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </td>
@@ -179,6 +186,7 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_articles.php">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="type">Type:</label>
                         <select id="type" name="type" class="form-control" required>
@@ -222,6 +230,7 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
             <div class="modal-body">
                 <form method="post" action="gestion_articles.php">
                     <input type="hidden" id="edit-id" name="id">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <div class="form-group">
                         <label for="edit-type">Type:</label>
                         <select id="edit-type" name="type" class="form-control" required>

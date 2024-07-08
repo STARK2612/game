@@ -2,10 +2,7 @@
 session_start();
 
 function is_logged_in() {
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ../frontend/login.php");
-        exit;
-    }
+    return isset($_SESSION['user_id']);
 }
 
 function check_inactivity() {
@@ -13,14 +10,14 @@ function check_inactivity() {
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
         session_unset();
         session_destroy();
-        header("Location: ../frontend/login.php");
+        header("Location: /frontend/index.php");
         exit;
     }
     $_SESSION['last_activity'] = time();
 }
 
 // Charger les paramètres de configuration des couleurs
-$config_file = '../backend/config.json';
+$config_file = __DIR__ . '/../backend/config.json';
 if (file_exists($config_file)) {
     $config = json_decode(file_get_contents($config_file), true);
     if (isset($config['nav_item_color'])) {
@@ -31,6 +28,9 @@ if (file_exists($config_file)) {
     }
     if (isset($config['footer_bg_color'])) {
         $_SESSION['footer_bg_color'] = $config['footer_bg_color'];
+    }
+    if (isset($config['background_color'])) {
+        $_SESSION['background_color'] = $config['background_color'];
     }
 }
 ?>

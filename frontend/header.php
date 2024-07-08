@@ -11,8 +11,10 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionnaire d'Armes, de Munitions et d'Equipements</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         .nav-item {
             background-color: <?= htmlspecialchars($menu_color) ?>;
@@ -35,8 +37,11 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
 <body>
     <header class="custom-nav-item text-white p-3">
         <div class="container">
-            <h1 class="h3">Gestionnaire d'Armes, de Munitions et d'Equipements (G.A.M.E)</h1>
-            <p>Bienvenue, <?= $_SESSION['user_name'] ?></p>
+            <h1 class="h3 text-center">Gestionnaire d'Armes, de Munitions et d'Equipements (G.A.M.E)</h1>
+            <p>
+                Bienvenue, 
+                <?= isset($_SESSION['user_firstname']) ? htmlspecialchars($_SESSION['user_firstname']) . ' ' . htmlspecialchars($_SESSION['user_name']) : 'Utilisateur' ?>
+            </p>
             <nav>
                 <ul class="nav">
                     <li class="nav-item"><a class="nav-link text-white" href="dashboard.php">Dashboard</a></li>
@@ -54,3 +59,4 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
         </div>
     </header>
     <main class="container mt-4">
+

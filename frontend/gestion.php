@@ -25,6 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $hover_color = $_POST['hover_color'];
         file_put_contents('../backend/hover_color.txt', $hover_color);
     }
+    if (isset($_POST['background_color'])) {
+        $background_color = $_POST['background_color'];
+        file_put_contents('../backend/background_color.txt', $background_color);
+    }
 }
 
 // Charger les configurations actuelles
@@ -32,6 +36,7 @@ $num_debut_articles = file_exists('../backend/num_debut_articles.txt') ? file_ge
 $num_debut_seances = file_exists('../backend/num_debut_seances.txt') ? file_get_contents('../backend/num_debut_seances.txt') : '0';
 $menu_color = file_exists('../backend/menu_color.txt') ? file_get_contents('../backend/menu_color.txt') : '#000000'; // Default color black
 $hover_color = file_exists('../backend/hover_color.txt') ? file_get_contents('../backend/hover_color.txt') : '#000000'; // Default color black
+$background_color = file_exists('../backend/background_color.txt') ? file_get_contents('../backend/background_color.txt') : '#ffffff'; // Default color white
 ?>
 
 <?php include 'header.php'; ?>
@@ -91,6 +96,10 @@ $hover_color = file_exists('../backend/hover_color.txt') ? file_get_contents('..
                         <div class="form-group">
                             <label for="hover_color">Couleur de surbrillance des liens du menu:</label>
                             <input type="color" id="hover_color" name="hover_color" class="form-control" value="<?= htmlspecialchars($hover_color) ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="background_color">Couleur de fond:</label>
+                            <input type="color" id="background_color" name="background_color" class="form-control" value="<?= htmlspecialchars($background_color) ?>">
                         </div>
                         <button type="submit" class="btn btn-primary">Sauvegarder</button>
                     </form>

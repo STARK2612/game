@@ -1,9 +1,10 @@
+/* Style général */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
     color: #333;
 }
 
+/* Style pour le header */
 header {
     background-color: #333;
     color: #fff;
@@ -33,17 +34,18 @@ header nav ul li a {
     text-decoration: none;
 }
 
+/* Style principal */
 .main {
     padding: 20px;
     margin: 0 auto;
     max-width: 1200px;
 }
 
+/* Style pour le container de login */
 .login-container {
     width: 300px;
     margin: 100px auto;
     padding: 20px;
-    background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -67,7 +69,6 @@ header nav ul li a {
     padding: 10px;
     font-size: 16px;
     background-color: #333;
-    color: #fff;
     border: none;
     cursor: pointer;
 }
@@ -82,12 +83,29 @@ header nav ul li a {
     margin-bottom: 10px;
 }
 
+/* Style pour les tables */
+.table {
+    width: auto; /* Adjust width to fit content */
+    table-layout: auto; /* Adjust column width based on content */
+    overflow-x: auto; /* Add horizontal scroll if needed */
+}
+
 .table td {
     word-wrap: break-word;
     max-width: 150px; /* Vous pouvez ajuster cette valeur selon vos besoins */
     white-space: pre-wrap; /* Cette propriété assure que les espaces sont respectés et le texte s'affiche correctement */
 }
 
+.table th:nth-child(1),
+.table td:nth-child(1),
+.table th:nth-child(8),
+.table td:nth-child(8),
+.table th:nth-child(11),
+.table td:nth-child(11) {
+    display: none;
+}
+
+/* Style pour les cartes */
 .card-body {
     display: flex;
     align-items: center;
@@ -104,6 +122,7 @@ header nav ul li a {
     text-align: center;
 }
 
+/* Style pour les formulaires */
 form {
     width: 100%;
 }
@@ -116,26 +135,7 @@ form {
     text-align: center;
 }
 
-/* Styles supplémentaires extraits des fichiers PHP */
-.table {
-    width: auto; /* Adjust width to fit content */
-    table-layout: auto; /* Adjust column width based on content */
-    overflow-x: auto; /* Add horizontal scroll if needed */
-}
-
-.table th:nth-child(1),
-.table td:nth-child(1) {
-    display: none;
-}
-.table th:nth-child(8),
-.table td:nth-child(8) {
-    display: none;
-}
-.table th:nth-child(11),
-.table td:nth-child(11) {
-    display: none;
-}
-
+/* Styles supplémentaires */
 .action-buttons {
     display: flex;
     flex-direction: column;
