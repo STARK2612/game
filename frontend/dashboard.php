@@ -1,6 +1,7 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
+require_once '../backend/csrf.php'; // Ajouter cette ligne
 is_logged_in();
 check_inactivity();
 

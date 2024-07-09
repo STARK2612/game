@@ -1,5 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
@@ -9,10 +9,11 @@ function generate_csrf() {
     return $token;
 }
 
-function verify_csrf_token($token) {
+function validate_csrf($token) {
     if (!isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
-        throw new Exception('Invalid CSRF token');
+        return false;
     }
     unset($_SESSION['csrf_token']);
+    return true;
 }
 ?>

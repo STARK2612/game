@@ -53,10 +53,22 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_stands.php">Stands</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion_statistiques.php">Statistiques</a></li>
                     <li class="nav-item"><a class="nav-link text-white" href="gestion.php">Gestion</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="../backend/logout.php">Déconnexion</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="#" id="logout-btn">Déconnexion</a>
+                        <form id="logout-form" method="POST" action="index.php" style="display: none;">
+                            <input type="hidden" name="action" value="logout">
+                        </form>
+                    </li>
                 </ul>
             </nav>
         </div>
     </header>
     <main class="container mt-4">
-
+    <script>
+        document.getElementById('logout-btn').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.getElementById('logout-form').submit();
+        });
+    </script>
+</body>
+</html>

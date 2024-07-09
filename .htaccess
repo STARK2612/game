@@ -9,7 +9,5 @@ RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-
-
 # Rediriger toutes les autres demandes vers index.php
 RewriteRule ^(.*)$ frontend/index.php [L,QSA]

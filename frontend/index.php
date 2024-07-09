@@ -1,16 +1,50 @@
 <?php
+// Afficher les erreurs pour le débogage
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once '../backend/session.php';
 require_once '../backend/config.php';
-require_once '../backend/csrf.php';
+require_once '../backend/csrf.php'; // Inclusion du fichier csrf.php
 
-// Vérifiez si l'utilisateur est connecté
-if (is_logged_in()) {
-    header("Location: dashboard.php");
+// Vérifier si une session est déjà active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'logout') {
+    // Messages de débogage
+    error_log("Déconnexion de l'utilisateur avec ID: " . $_SESSION['user_id']);
+
+    // Détruire toutes les variables de session
+    $_SESSION = array();
+
+    // Si vous voulez détruire complètement la session, effacez également le cookie de session.
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // Détruire la session
+    session_destroy();
+
+    // Messages de débogage
+    error_log("Session détruite et redirection vers la page de connexion.");
+
+    // Rediriger vers la page de connexion
+    header("Location: index.php");
     exit;
 }
 
+is_logged_in();
+check_inactivity();
+
 // Gestion de la soumission du formulaire de connexion
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
     if (!validate_csrf($_POST['csrf_token'])) {
         die("Invalid CSRF token.");
     }
@@ -46,7 +80,6 @@ $background_color = '#f4f4f4'; // Couleur par défaut
 if (file_exists($background_color_file)) {
     $background_color = file_get_contents($background_color_file);
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -85,12 +118,12 @@ if (file_exists($background_color_file)) {
                 <?php endif; ?>
                 <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                 <div class="form-group">
-                    <label for="identifiant">Identifiant:</label>
-                    <input type="text" id="identifiant" name="identifiant" class="form-control" required>
+                    <label for="identifiant">Identifiant</label>
+                    <input type="text" name="identifiant" id="identifiant" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="mot_de_passe">Mot de passe:</label>
-                    <input type="password" id="mot_de_passe" name="mot_de_passe" class="form-control" required>
+                    <label for="mot_de_passe">Mot de passe</label>
+                    <input type="password" name="mot_de_passe" id="mot_de_passe" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Connexion</button>
             </form>
