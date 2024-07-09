@@ -1,5 +1,17 @@
 <?php
 require_once '../backend/session.php';
+require_once '../backend/config.php';
+require_once '../backend/csrf.php';
+
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../frontend/index.php");
+    exit;
+}
+
 is_logged_in();
 check_inactivity();
 
@@ -40,7 +52,7 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
             <h1 class="h3 text-center">Gestionnaire d'Armes, de Munitions et d'Equipements (G.A.M.E)</h1>
             <p>
                 Bienvenue, 
-                <?= isset($_SESSION['user_firstname']) ? htmlspecialchars($_SESSION['user_firstname']) . ' ' . htmlspecialchars($_SESSION['user_name']) : 'Utilisateur' ?>
+                <?= isset($_SESSION['user_firstname']) && isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_firstname']) . ' ' . htmlspecialchars($_SESSION['user_name']) : '' ?>
             </p>
             <nav>
                 <ul class="nav">

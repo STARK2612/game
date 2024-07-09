@@ -1,15 +1,10 @@
 <?php
-// Afficher les erreurs pour le débogage
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 require_once '../backend/session.php';
 require_once '../backend/config.php';
-require_once '../backend/csrf.php'; // Inclusion du fichier csrf.php
+require_once '../backend/csrf.php';
 
 // Vérifier si une session est déjà active
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
@@ -39,9 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     header("Location: index.php");
     exit;
 }
-
-is_logged_in();
-check_inactivity();
 
 // Gestion de la soumission du formulaire de connexion
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['action'])) {
