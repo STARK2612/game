@@ -104,6 +104,9 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Ajouter des diagnostics pour vérifier les valeurs
+error_log(print_r($articles, true));
+
 // Calculer la valeur totale des munitions en stock et le stock total des cartouches
 $valeur_totale_munitions = 0;
 $stock_total_cartouches = 0;
@@ -169,6 +172,12 @@ $_SESSION['stock_total_cartouches'] = $stock_total_cartouches;
                     </td>
                 </tr>
                 <?php endforeach; ?>
+                <tr>
+                    <td colspan="4"><strong>Total Munitions</strong></td>
+                    <td><strong><?= htmlspecialchars($valeur_totale_munitions) ?> €</strong></td>
+                    <td><strong><?= htmlspecialchars($stock_total_cartouches) ?> cartouche(s)</strong></td>
+                    <td></td>
+                </tr>
             </tbody>
         </table>
     </div>

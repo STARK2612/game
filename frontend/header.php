@@ -8,7 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../frontend/index.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -26,25 +26,74 @@ $hover_color = file_get_contents('../backend/hover_color.txt');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionnaire d'Armes, de Munitions et d'Equipements</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
     <style>
-        .nav-item {
-            background-color: <?= htmlspecialchars($menu_color) ?>;
-        }
-        .nav-link:hover {
-            background-color: <?= htmlspecialchars($hover_color) ?>;
-        }
-        thead {
-            background-color: <?= htmlspecialchars($menu_color) ?>;
-            color: white;
-        }
-        header {
-            background-color: <?= htmlspecialchars($menu_color) ?>;
-        }
-        footer {
-            background-color: <?= htmlspecialchars($menu_color) ?>;
-        }
-    </style>
+    .nav-item {
+        background-color: <?= htmlspecialchars($menu_color) ?>;
+    }
+    .nav-link:hover {
+        background-color: <?= htmlspecialchars($hover_color) ?>;
+    }
+    thead {
+        background-color: <?= htmlspecialchars($menu_color) ?>;
+        color: white;
+    }
+    header {
+        background-color: <?= htmlspecialchars($menu_color) ?>;
+        color: white;
+        padding: 20px 0;
+    }
+    footer {
+        background-color: <?= htmlspecialchars($menu_color) ?>;
+        color: white;
+        padding: 10px 0;
+    }
+    .custom-nav-item {
+        background-color: <?= htmlspecialchars($menu_color) ?>;
+    }
+    .custom-nav-item .nav-link {
+        color: white;
+    }
+    .custom-nav-item .nav-link:hover {
+        background-color: <?= htmlspecialchars($hover_color) ?>;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    h1.h3 {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+    p {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    nav ul.nav {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: left;
+        margin: 0;
+    }
+    nav ul.nav li.nav-item {
+        margin: 0 10px;
+    }
+    nav ul.nav li.nav-item a.nav-link {
+        color: white;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: block;
+    }
+    nav ul.nav li.nav-item a.nav-link:hover {
+        background-color: <?= htmlspecialchars($hover_color) ?>;
+    }
+    .mt-4 {
+        margin-top: 1.5rem !important;
+    }
+</style>
+
 </head>
 <body>
     <header class="custom-nav-item text-white p-3">

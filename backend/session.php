@@ -6,18 +6,18 @@ function is_logged_in() {
 }
 
 function check_inactivity() {
-    $timeout = 1800; // Durée d'inactivité en secondes (30 minutes)
+    $timeout = 500;
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
         session_unset();
         session_destroy();
-        header("Location: /frontend/index.php");
+        header("Location: index.php");
         exit;
     }
     $_SESSION['last_activity'] = time();
 }
 
 // Charger les paramètres de configuration des couleurs
-$config_file = __DIR__ . '/../backend/config.json';
+$config_file = __DIR__ . '../backend/config.json';
 if (file_exists($config_file)) {
     $config = json_decode(file_get_contents($config_file), true);
     if (isset($config['nav_item_color'])) {

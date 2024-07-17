@@ -40,7 +40,6 @@ $background_color = file_exists('../backend/background_color.txt') ? file_get_co
 ?>
 
 <?php include 'header.php'; ?>
-
 <h2>Gestion</h2>
 
 <div class="container mt-4">

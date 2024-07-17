@@ -1,19 +1,253 @@
 <?php
 require_once '../backend/session.php';
 require_once '../backend/config.php';
-require_once '../backend/csrf.php'; // Ajouter cette ligne
+require_once '../backend/csrf.php'; // Inclure le fichier csrf.php
+
 is_logged_in();
 check_inactivity();
 
+function generate_reference($conn) {
+    $stmt = $conn->prepare("SELECT * FROM reference_suffix WHERE prefix = 'SEA-'");
+    $stmt->execute();
+    $suffix = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($suffix) {
+        $prefix = $suffix['prefix'];
+        $current_number = $suffix['current_number'];
+        $reference = $prefix . str_pad($current_number, 5, '0', STR_PAD_LEFT);
+
+        $new_number = $current_number + 1;
+        $stmt = $conn->prepare("UPDATE reference_suffix SET current_number = :current_number WHERE prefix = 'SEA-'");
+        $stmt->bindParam(':current_number', $new_number);
+        $stmt->execute();
+
+        return $reference;
+    } else {
+        throw new Exception("Prefix 'SEA-' not found in reference_suffix table.");
+    }
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    validate_csrf($_POST['csrf_token']); // Valider le token CSRF
+    if (!validate_csrf($_POST['csrf_token'])) { // Validate CSRF token
+        die('Invalid CSRF token');
+    }
 
     if (isset($_POST['add'])) {
-        // Traitement de l'ajout
+        $arme = $_POST['arme'];
+        $stock = $_POST['stock'];
+        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
+        $stand_de_tir = $_POST['stand_de_tir'];
+        $date_seance = $_POST['date_seance'];
+        $heure_debut = $_POST['heure_debut'];
+        $heure_fin = $_POST['heure_fin'];
+        $nom_invite = $_POST['nom_invite'] ?? '';
+        $commentaire = $_POST['commentaire'] ?? '';
+        $reference = generate_reference($conn);
+
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("INSERT INTO seance_tir (reference, arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire) VALUES (:reference, :arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire)");
+            $stmt->bindParam(':reference', $reference);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+
+            $stmt = $conn->prepare("INSERT INTO seance_tir (reference, arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, prix_boite, tarif, nom_invite, commentaire) VALUES (:reference, :arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :prix_boite, :tarif, :nom_invite, :commentaire)");
+            $stmt->bindParam(':reference', $reference);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        }
+
+        if ($stock == 'reglementaire') {
+            if (!isset($_SESSION['stock_total_cartouches'])) {
+                $_SESSION['stock_total_cartouches'] = 0;
+            }
+            $_SESSION['stock_total_cartouches'] -= $nombre_munitions_tirees;
+
+            $stmt = $conn->prepare("
+                SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
+                FROM articles
+                WHERE type = 'munition'
+            ");
+            $stmt->execute();
+            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($articles as $article) {
+                if ($article['cartouches_par_boite'] > 0) {
+                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                    if ($total_cartouches >= $nombre_munitions_tirees) {
+                        $nouveau_total_boites = ceil(($total_cartouches - $nombre_munitions_tirees) / $article['cartouches_par_boite']);
+                        $stmt = $conn->prepare("
+                            UPDATE achats
+                            SET quantite = :nouveau_total_boites
+                            WHERE article_id = :id
+                        ");
+                        $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                        $stmt->bindParam(':id', $article['id']);
+                        $stmt->execute();
+                        break;
+                    }
+                }
+            }
+        }
+
+        header("Location: gestion_seances.php");
+        exit;
     } elseif (isset($_POST['delete'])) {
-        // Traitement de la suppression
+        $id = $_POST['id'];
+
+        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees FROM seance_tir WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $seance = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $stmt = $conn->prepare("DELETE FROM seance_tir WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        if ($seance['stock'] == 'reglementaire') {
+            if (!isset($_SESSION['stock_total_cartouches'])) {
+                $_SESSION['stock_total_cartouches'] = 0;
+            }
+            $_SESSION['stock_total_cartouches'] += $seance['nombre_munitions_tirees'];
+
+            $stmt = $conn->prepare("
+                SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
+                FROM articles
+                WHERE type = 'munition'
+            ");
+            $stmt->execute();
+            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($articles as $article) {
+                if ($article['cartouches_par_boite'] > 0) {
+                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                    $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
+                    $stmt = $conn->prepare("
+                        UPDATE achats
+                        SET quantite = :nouveau_total_boites
+                        WHERE article_id = :id
+                    ");
+                    $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                    $stmt->bindParam(':id', $article['id']);
+                    $stmt->execute();
+                    break;
+                }
+            }
+        }
+
+        header("Location: gestion_seances.php");
+        exit;
     } elseif (isset($_POST['update'])) {
-        // Traitement de la mise à jour
+        $id = $_POST['id'];
+        $arme = $_POST['arme'];
+        $stock = $_POST['stock'];
+        $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
+        $stand_de_tir = $_POST['stand_de_tir'];
+        $date_seance = $_POST['date_seance'];
+        $heure_debut = $_POST['heure_debut'];
+        $heure_fin = $_POST['heure_fin'];
+        $nom_invite = $_POST['nom_invite'] ?? '';
+        $commentaire = $_POST['commentaire'] ?? '';
+
+        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees FROM seance_tir WHERE id = :id");
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $seance = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($stock == 'reglementaire') {
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        } else {
+            $prix_boite = $_POST['prix_boite'];
+            $tarif = $_POST['tarif'];
+
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, prix_boite = :prix_boite, tarif = :tarif, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':arme', $arme);
+            $stmt->bindParam(':stock', $stock);
+            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+            $stmt->bindParam(':date_seance', $date_seance);
+            $stmt->bindParam(':heure_debut', $heure_debut);
+            $stmt->bindParam(':heure_fin', $heure_fin);
+            $stmt->bindParam(':prix_boite', $prix_boite);
+            $stmt->bindParam(':tarif', $tarif);
+            $stmt->bindParam(':nom_invite', $nom_invite);
+            $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->execute();
+        }
+
+        if ($seance['stock'] != $stock) {
+            if (!isset($_SESSION['stock_total_cartouches'])) {
+                $_SESSION['stock_total_cartouches'] = 0;
+            }
+            if ($stock == 'reglementaire') {
+                $_SESSION['stock_total_cartouches'] -= $nombre_munitions_tirees;
+            } else {
+                $_SESSION['stock_total_cartouches'] += $nombre_munitions_tirees;
+            }
+
+            $stmt = $conn->prepare("
+                SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
+                FROM articles
+                WHERE type = 'munition'
+            ");
+            $stmt->execute();
+            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($articles as $article) {
+                if ($article['cartouches_par_boite'] > 0) {
+                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                    if ($seance['stock'] == 'reglementaire' && $stock == 'achete') {
+                        $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
+                    } else {
+                        $nouveau_total_boites = ceil(($total_cartouches - $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
+                    }
+                    $stmt = $conn->prepare("
+                        UPDATE achats
+                        SET quantite = :nouveau_total_boites
+                        WHERE article_id = :id
+                    ");
+                    $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                    $stmt->bindParam(':id', $article['id']);
+                    $stmt->execute();
+                    break;
+                }
+            }
+        }
+
+        header("Location: gestion_seances.php");
+        exit;
     }
 }
 
@@ -33,12 +267,10 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $seances = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupérer la liste des armes
 $stmt = $conn->prepare("SELECT id, marque, model FROM armes");
 $stmt->execute();
 $armes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupérer la liste des stands
 $stmt = $conn->prepare("SELECT id, nom FROM stands");
 $stmt->execute();
 $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -48,7 +280,6 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="container">
     <h2>Gestion des Séances de Tir 
-    <link rel="stylesheet" href="../css/style.css">
         <button id="generate-pdf" class="btn btn-outline-primary btn-sm">Générer PDF</button>
         <button id="add-btn" class="btn btn-primary">Ajouter une Séance</button>
     </h2>
@@ -88,7 +319,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <button class="btn btn-sm btn-warning edit-btn mb-1" data-id="<?= $seance['id'] ?>" data-arme="<?= $seance['arme'] ?>" data-stock="<?= $seance['stock'] ?>" data-nombre_munitions_tirees="<?= $seance['nombre_munitions_tirees'] ?>" data-stand_de_tir="<?= $seance['stand_de_tir'] ?>" data-date_seance="<?= $seance['date_seance'] ?>" data-heure_debut="<?= $seance['heure_debut'] ?>" data-heure_fin="<?= $seance['heure_fin'] ?>" data-prix_boite="<?= $seance['prix_boite'] ?>" data-tarif="<?= $seance['tarif'] ?>" data-nom_invite="<?= $seance['nom_invite'] ?>" data-commentaire="<?= $seance['commentaire'] ?>">Modifier</button>
                         <form method="post" action="gestion_seances.php" onsubmit="return confirm('Voulez-vous vraiment supprimer cette séance ?');">
                             <input type="hidden" name="id" value="<?= $seance['id'] ?>">
-                            <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf(); ?>">
                             <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </td>
@@ -111,7 +342,7 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_seances.php">
-                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf(); ?>">
                     <div class="form-group">
                         <label for="arme">Arme:</label>
                         <select id="arme" name="arme" class="form-control" required>
@@ -189,8 +420,8 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <form method="post" action="gestion_seances.php">
-                    <input type="hidden" name="csrf_token" value="<?= generate_csrf() ?>">
                     <input type="hidden" id="edit-id" name="id">
+                    <input type="hidden" name="csrf_token" value="<?= generate_csrf(); ?>">
                     <div class="form-group">
                         <label for="edit-arme">Arme:</label>
                         <select id="edit-arme" name="arme" class="form-control" required>
@@ -337,23 +568,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape');
 
-        // Add title
         doc.text("Gestion des Séances de Tir", 14, 10);
 
-        // Get data from table
         const table = document.getElementById('seancesTable');
         const headers = [];
         const data = [];
-        const excludedColumns = [11]; // Exclude 'Actions' column
+        const excludedColumns = [11];
 
-        // Get headers
         table.querySelectorAll('thead th').forEach((th, index) => {
             if (!excludedColumns.includes(index)) {
                 headers.push(th.innerText);
             }
         });
 
-        // Get rows
         table.querySelectorAll('tbody tr').forEach(row => {
             const rowData = [];
             row.querySelectorAll('td').forEach((td, index) => {
@@ -364,7 +591,6 @@ document.addEventListener('DOMContentLoaded', function() {
             data.push(rowData);
         });
 
-        // Add table to PDF
         doc.autoTable({
             head: [headers],
             body: data,
@@ -372,7 +598,6 @@ document.addEventListener('DOMContentLoaded', function() {
             styles: { fontSize: 8 }
         });
 
-        // Open in new tab
         window.open(doc.output('bloburl'), '_blank');
     });
 });
