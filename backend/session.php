@@ -6,7 +6,7 @@ function is_logged_in() {
 }
 
 function check_inactivity() {
-    $timeout = 20; // 20 seconds timeout
+    $timeout = 60; // 60 seconds timeout
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
         session_unset();
         session_destroy();
