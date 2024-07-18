@@ -33,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (isset($_POST['add'])) {
+        // Récupérer les données du formulaire
         $arme = $_POST['arme'];
         $stock = $_POST['stock'];
         $nombre_munitions_tirees = $_POST['nombre_munitions_tirees'];
@@ -45,18 +46,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $reference = generate_reference($conn);
 
         if ($stock == 'reglementaire') {
-            $stmt = $conn->prepare("INSERT INTO seance_tir (reference, arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire) VALUES (:reference, :arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire)");
-            $stmt->bindParam(':reference', $reference);
-            $stmt->bindParam(':arme', $arme);
-            $stmt->bindParam(':stock', $stock);
-            $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
-            $stmt->bindParam(':stand_de_tir', $stand_de_tir);
-            $stmt->bindParam(':date_seance', $date_seance);
-            $stmt->bindParam(':heure_debut', $heure_debut);
-            $stmt->bindParam(':heure_fin', $heure_fin);
-            $stmt->bindParam(':nom_invite', $nom_invite);
-            $stmt->bindParam(':commentaire', $commentaire);
+            // Récupérer l'ID de la munition sélectionnée
+            $munition_id = $_POST['munition_reglementaire'];
+
+            // Récupérer le stock de la munition sélectionnée
+            $stmt = $conn->prepare("SELECT marque, model, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites FROM articles WHERE id = :id");
+            $stmt->bindParam(':id', $munition_id);
             $stmt->execute();
+            $munition = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($munition) {
+                $total_cartouches = $munition['total_boites'] * $munition['cartouches_par_boite'];
+
+                if ($nombre_munitions_tirees > $total_cartouches) {
+                    echo "<script>alert('Stock insuffisant pour les munitions sélectionnées.'); window.location.href='gestion_seances.php';</script>";
+                    exit;
+                } else {
+                    // Mettre à jour le stock de munitions
+                    $nouveau_total_boites = ceil(($total_cartouches - $nombre_munitions_tirees) / $munition['cartouches_par_boite']);
+                    $stmt = $conn->prepare("UPDATE achats SET quantite = :nouveau_total_boites WHERE article_id = :id");
+                    $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                    $stmt->bindParam(':id', $munition_id);
+                    $stmt->execute();
+
+                    // Insérer la séance de tir
+                    $stmt = $conn->prepare("INSERT INTO seance_tir (reference, arme, stock, nombre_munitions_tirees, stand_de_tir, date_seance, heure_debut, heure_fin, nom_invite, commentaire, munition_id) VALUES (:reference, :arme, :stock, :nombre_munitions_tirees, :stand_de_tir, :date_seance, :heure_debut, :heure_fin, :nom_invite, :commentaire, :munition_id)");
+                    $stmt->bindParam(':reference', $reference);
+                    $stmt->bindParam(':arme', $arme);
+                    $stmt->bindParam(':stock', $stock);
+                    $stmt->bindParam(':nombre_munitions_tirees', $nombre_munitions_tirees);
+                    $stmt->bindParam(':stand_de_tir', $stand_de_tir);
+                    $stmt->bindParam(':date_seance', $date_seance);
+                    $stmt->bindParam(':heure_debut', $heure_debut);
+                    $stmt->bindParam(':heure_fin', $heure_fin);
+                    $stmt->bindParam(':nom_invite', $nom_invite);
+                    $stmt->bindParam(':commentaire', $commentaire);
+                    $stmt->bindParam(':munition_id', $munition_id);
+                    $stmt->execute();
+                }
+            }
         } else {
             $prix_boite = $_POST['prix_boite'];
             $tarif = $_POST['tarif'];
@@ -77,45 +105,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->execute();
         }
 
-        if ($stock == 'reglementaire') {
-            if (!isset($_SESSION['stock_total_cartouches'])) {
-                $_SESSION['stock_total_cartouches'] = 0;
-            }
-            $_SESSION['stock_total_cartouches'] -= $nombre_munitions_tirees;
-
-            $stmt = $conn->prepare("
-                SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
-                FROM articles
-                WHERE type = 'munition'
-            ");
-            $stmt->execute();
-            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            foreach ($articles as $article) {
-                if ($article['cartouches_par_boite'] > 0) {
-                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
-                    if ($total_cartouches >= $nombre_munitions_tirees) {
-                        $nouveau_total_boites = ceil(($total_cartouches - $nombre_munitions_tirees) / $article['cartouches_par_boite']);
-                        $stmt = $conn->prepare("
-                            UPDATE achats
-                            SET quantite = :nouveau_total_boites
-                            WHERE article_id = :id
-                        ");
-                        $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
-                        $stmt->bindParam(':id', $article['id']);
-                        $stmt->execute();
-                        break;
-                    }
-                }
-            }
-        }
-
         header("Location: gestion_seances.php");
         exit;
     } elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
 
-        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees FROM seance_tir WHERE id = :id");
+        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees, munition_id FROM seance_tir WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         $seance = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -133,25 +128,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $conn->prepare("
                 SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
                 FROM articles
-                WHERE type = 'munition'
+                WHERE id = :id
             ");
+            $stmt->bindParam(':id', $seance['munition_id']);
             $stmt->execute();
-            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $article = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            foreach ($articles as $article) {
-                if ($article['cartouches_par_boite'] > 0) {
-                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
-                    $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
-                    $stmt = $conn->prepare("
-                        UPDATE achats
-                        SET quantite = :nouveau_total_boites
-                        WHERE article_id = :id
-                    ");
-                    $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
-                    $stmt->bindParam(':id', $article['id']);
-                    $stmt->execute();
-                    break;
-                }
+            if ($article) {
+                $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
+                $stmt = $conn->prepare("
+                    UPDATE achats
+                    SET quantite = :nouveau_total_boites
+                    WHERE article_id = :id
+                ");
+                $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                $stmt->bindParam(':id', $article['id']);
+                $stmt->execute();
             }
         }
 
@@ -169,13 +162,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $nom_invite = $_POST['nom_invite'] ?? '';
         $commentaire = $_POST['commentaire'] ?? '';
 
-        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees FROM seance_tir WHERE id = :id");
+        $stmt = $conn->prepare("SELECT stock, nombre_munitions_tirees, munition_id FROM seance_tir WHERE id = :id");
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         $seance = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($stock == 'reglementaire') {
-            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire WHERE id = :id");
+            $stmt = $conn->prepare("UPDATE seance_tir SET arme = :arme, stock = :stock, nombre_munitions_tirees = :nombre_munitions_tirees, stand_de_tir = :stand_de_tir, date_seance = :date_seance, heure_debut = :heure_debut, heure_fin = :heure_fin, nom_invite = :nom_invite, commentaire = :commentaire, munition_id = :munition_id WHERE id = :id");
             $stmt->bindParam(':id', $id);
             $stmt->bindParam(':arme', $arme);
             $stmt->bindParam(':stock', $stock);
@@ -186,6 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':heure_fin', $heure_fin);
             $stmt->bindParam(':nom_invite', $nom_invite);
             $stmt->bindParam(':commentaire', $commentaire);
+            $stmt->bindParam(':munition_id', $_POST['munition_reglementaire']);
             $stmt->execute();
         } else {
             $prix_boite = $_POST['prix_boite'];
@@ -220,29 +214,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $conn->prepare("
                 SELECT id, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites
                 FROM articles
-                WHERE type = 'munition'
+                WHERE id = :id
             ");
+            $stmt->bindParam(':id', $seance['munition_id']);
             $stmt->execute();
-            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $article = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            foreach ($articles as $article) {
-                if ($article['cartouches_par_boite'] > 0) {
-                    $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
-                    if ($seance['stock'] == 'reglementaire' && $stock == 'achete') {
-                        $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
-                    } else {
-                        $nouveau_total_boites = ceil(($total_cartouches - $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
-                    }
-                    $stmt = $conn->prepare("
-                        UPDATE achats
-                        SET quantite = :nouveau_total_boites
-                        WHERE article_id = :id
-                    ");
-                    $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
-                    $stmt->bindParam(':id', $article['id']);
-                    $stmt->execute();
-                    break;
+            if ($article) {
+                $total_cartouches = $article['total_boites'] * $article['cartouches_par_boite'];
+                if ($seance['stock'] == 'reglementaire' && $stock == 'achete') {
+                    $nouveau_total_boites = ceil(($total_cartouches + $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
+                } else {
+                    $nouveau_total_boites = ceil(($total_cartouches - $seance['nombre_munitions_tirees']) / $article['cartouches_par_boite']);
                 }
+                $stmt = $conn->prepare("
+                    UPDATE achats
+                    SET quantite = :nouveau_total_boites
+                    WHERE article_id = :id
+                ");
+                $stmt->bindParam(':nouveau_total_boites', $nouveau_total_boites);
+                $stmt->bindParam(':id', $article['id']);
+                $stmt->execute();
             }
         }
 
@@ -250,6 +242,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 }
+
+// Ajouter cette requête dans gestion_seances.php pour récupérer les munitions
+$stmt = $conn->prepare("SELECT id, marque, model, cartouches_par_boite, (SELECT COALESCE(SUM(quantite), 0) FROM achats WHERE article_id = articles.id) AS total_boites FROM articles WHERE type = 'munition'");
+$stmt->execute();
+$munitions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $stmt = $conn->prepare("
     SELECT 
@@ -369,6 +366,17 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <option value="exterieur">Tarif Extérieur</option>
                         </select>
                     </div>
+                    <div class="form-group" id="munition_reglementaire_group" style="display: none;">
+                        <label for="munition_reglementaire">Munitions Réglementaires:</label>
+                        <select id="munition_reglementaire" name="munition_reglementaire" class="form-control">
+                            <option value="" disabled selected>Choisir une munition</option>
+                            <?php foreach ($munitions as $munition): ?>
+                                <option value="<?= $munition['id'] ?>" data-stock="<?= $munition['total_boites'] * $munition['cartouches_par_boite'] ?>">
+                                    <?= htmlspecialchars($munition['marque'] . ' ' . $munition['model']) ?> (Stock: <?= htmlspecialchars($munition['total_boites'] * $munition['cartouches_par_boite']) ?> cartouches)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="nombre_munitions_tirees">Nombre de Munitions Tirées:</label>
                         <input type="number" id="nombre_munitions_tirees" name="nombre_munitions_tirees" class="form-control" required>
@@ -446,6 +454,17 @@ $stands = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <select id="edit-tarif" name="tarif" class="form-control">
                             <option value="club">Tarif Club</option>
                             <option value="exterieur">Tarif Extérieur</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-munition_reglementaire_group" style="display: none;">
+                        <label for="edit-munition_reglementaire">Munitions Réglementaires:</label>
+                        <select id="edit-munition_reglementaire" name="munition_reglementaire" class="form-control">
+                            <option value="" disabled selected>Choisir une munition</option>
+                            <?php foreach ($munitions as $munition): ?>
+                                <option value="<?= $munition['id'] ?>" data-stock="<?= $munition['total_boites'] * $munition['cartouches_par_boite'] ?>">
+                                    <?= htmlspecialchars($munition['marque'] . ' ' . $munition['model']) ?> (Stock: <?= htmlspecialchars($munition['total_boites'] * $munition['cartouches_par_boite']) ?> cartouches)
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -535,9 +554,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (stock === 'reglementaire') {
                 document.getElementById('edit-prix_boite_group').style.display = 'none';
                 document.getElementById('edit-tarif_group').style.display = 'none';
+                document.getElementById('edit-munition_reglementaire_group').style.display = 'block';
             } else {
                 document.getElementById('edit-prix_boite_group').style.display = 'block';
                 document.getElementById('edit-tarif_group').style.display = 'block';
+                document.getElementById('edit-munition_reglementaire_group').style.display = 'none';
             }
 
             editModal.show();
@@ -548,9 +569,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value === 'reglementaire') {
             document.getElementById('prix_boite_group').style.display = 'none';
             document.getElementById('tarif_group').style.display = 'none';
+            document.getElementById('munition_reglementaire_group').style.display = 'block';
         } else {
             document.getElementById('prix_boite_group').style.display = 'block';
             document.getElementById('tarif_group').style.display = 'block';
+            document.getElementById('munition_reglementaire_group').style.display = 'none';
         }
     });
 
@@ -558,9 +581,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value === 'reglementaire') {
             document.getElementById('edit-prix_boite_group').style.display = 'none';
             document.getElementById('edit-tarif_group').style.display = 'none';
+            document.getElementById('edit-munition_reglementaire_group').style.display = 'block';
         } else {
             document.getElementById('edit-prix_boite_group').style.display = 'block';
             document.getElementById('edit-tarif_group').style.display = 'block';
+            document.getElementById('edit-munition_reglementaire_group').style.display = 'none';
         }
     });
 

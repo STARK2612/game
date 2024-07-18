@@ -5,15 +5,26 @@ is_logged_in();
 check_inactivity();
 
 $errors = [];
+$seances = [];
+$categorie = '';
+$date_debut = '';
+$date_fin = '';
+$annee = '';
+$periode = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $categorie = $_POST['categorie'];
     $periode = $_POST['periode'];
     $date_debut = $_POST['date_debut'] ?? null;
     $date_fin = $_POST['date_fin'] ?? null;
+    $annee = $_POST['annee'] ?? null;
 
     if ($periode == 'semaine' && (!$date_debut || !$date_fin)) {
         $errors[] = "Veuillez saisir une date de début et une date de fin.";
+    }
+
+    if ($periode == 'annee' && !$annee) {
+        $errors[] = "Veuillez saisir une année.";
     }
 
     if (empty($errors)) {
@@ -24,25 +35,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     armes.marque, 
                     armes.model, 
                     armes.prix AS prix_arme, 
-                    SUM(CASE WHEN seance_tir.stock = 'reglementaire' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_reglementaire,
-                    SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END) AS cartouches_achetees,
-                    SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.prix_boite ELSE 0 END) AS prix_total_cartouches_achetees,
-                    armes.prix_reparation,
+                    COALESCE(SUM(CASE WHEN seance_tir.stock = 'reglementaire' THEN seance_tir.nombre_munitions_tirees ELSE 0 END), 0) AS cartouches_reglementaire,
+                    COALESCE(SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.nombre_munitions_tirees ELSE 0 END), 0) AS cartouches_achetees,
+                    COALESCE(SUM(CASE WHEN seance_tir.stock = 'achete' THEN seance_tir.prix_boite ELSE 0 END), 0) AS prix_total_cartouches_achetees,
+                    COALESCE(armes.prix_reparation, 0) AS prix_reparation,
                     ";
 
             if ($periode == 'mois') {
                 $query .= "MONTH(seance_tir.date_seance) AS mois, YEAR(seance_tir.date_seance) AS annee";
             } elseif ($periode == 'semaine') {
-                $query .= "seance_tir.date_seance AS date_seance";
+                $query .= "seance_tir.date_seance AS date_seance, YEAR(seance_tir.date_seance) AS annee";
             } else {
                 $query .= "YEAR(seance_tir.date_seance) AS annee";
             }
 
             $query .= "
-                FROM seance_tir 
-                JOIN armes ON seance_tir.arme = armes.id 
-                WHERE 1=1
+                FROM armes
+                LEFT JOIN seance_tir ON seance_tir.arme = armes.id AND YEAR(seance_tir.date_seance) = :annee
+                WHERE :annee IS NOT NULL
             ";
+            $params[':annee'] = $annee;
 
             if ($periode == 'semaine' && $date_debut && $date_fin) {
                 $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
@@ -88,6 +100,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $query .= " AND seance_tir.date_seance BETWEEN :date_debut AND :date_fin";
                 $params[':date_debut'] = $date_debut;
                 $params[':date_fin'] = $date_fin;
+            } elseif ($periode == 'annee' && $annee) {
+                $query .= " AND YEAR(seance_tir.date_seance) = :annee";
+                $params[':annee'] = $annee;
             }
 
             if ($periode == 'mois') {
@@ -144,81 +159,92 @@ function getMonthName($monthNumber) {
         <div class="form-group">
             <label for="categorie">Catégorie:</label>
             <select id="categorie" name="categorie" class="form-control" required>
-                <option value="armes">Armes</option>
-                <option value="invites">Invités</option>
+                <option value="armes" <?= ($categorie == 'armes') ? 'selected' : '' ?>>Armes</option>
+                <option value="invites" <?= ($categorie == 'invites') ? 'selected' : '' ?>>Invités</option>
             </select>
         </div>
         <div class="form-group">
             <label for="periode">Période:</label>
             <select id="periode" name="periode" class="form-control" required>
-                <option value="semaine">Semaine</option>
-                <option value="mois">Mois</option>
-                <option value="annee">Année</option>
+                <option value="semaine" <?= ($periode == 'semaine') ? 'selected' : '' ?>>Semaine</option>
+                <option value="mois" <?= ($periode == 'mois') ? 'selected' : '' ?>>Mois</option>
+                <option value="annee" <?= ($periode == 'annee') ? 'selected' : '' ?>>Année</option>
             </select>
         </div>
         <div class="form-group" id="date_debut_group">
             <label for="date_debut">Date de début:</label>
-            <input type="date" id="date_debut" name="date_debut" class="form-control">
+            <input type="date" id="date_debut" name="date_debut" class="form-control" value="<?= htmlspecialchars($date_debut ?? '') ?>">
         </div>
         <div class="form-group" id="date_fin_group">
             <label for="date_fin">Date de fin:</label>
-            <input type="date" id="date_fin" name="date_fin" class="form-control">
+            <input type="date" id="date_fin" name="date_fin" class="form-control" value="<?= htmlspecialchars($date_fin ?? '') ?>">
+        </div>
+        <div class="form-group" id="annee_group">
+            <label for="annee">Année:</label>
+            <input type="number" id="annee" name="annee" class="form-control" value="<?= htmlspecialchars($annee ?? '') ?>">
         </div>
     </form>
 
     <?php if (isset($seances) && $categorie == 'armes'): ?>
-        <h3>Résultats pour les Armes</h3>
-        <div id="stat-table" class="table-responsive">
-            <table class="table table-bordered" id="statistiquesTable">
-                <thead>
+    <h3>Résultats pour les Armes</h3>
+    <div id="stat-table" class="table-responsive">
+        <table class="table table-bordered" id="statistiquesTable">
+            <thead>
+                <tr>
+                    <?php if ($periode == 'mois'): ?>
+                        <th>Mois</th>
+                        <th>Année</th>
+                    <?php elseif ($periode == 'annee'): ?>
+                        <th>Année</th>
+                    <?php elseif ($periode == 'semaine'): ?>
+                        <th>Date</th>
+                        <th>Année</th>
+                    <?php endif; ?>
+                    <th>Nom de l'Arme</th>
+                    <th>Prix de l'Arme</th>
+                    <th>Cartouches Réglementaire Tirées</th>
+                    <th>Cartouches Achetées Tirées</th>
+                    <th>Prix de Réparation</th>
+                    <th>Total cartouches tirées</th>
+                    <th>Total des Prix (€)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $totalTirsAnnee = 0;
+                foreach ($seances as $seance):
+                    $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
+                    $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
+                    $totalDesPrix = ($seance['prix_arme'] ?? 0) + ($seance['prix_reparation'] ?? 0);
+                    $totalTirsAnnee += $totalCartouchesTirees;
+                ?>
                     <tr>
                         <?php if ($periode == 'mois'): ?>
-                            <th>Mois</th>
-                            <th>Année</th>
+                            <td><?= htmlspecialchars($periodName ?? '') ?></td>
+                            <td><?= htmlspecialchars($seance['annee'] ?? '') ?></td>
                         <?php elseif ($periode == 'annee'): ?>
-                            <th>Année</th>
+                            <td><?= htmlspecialchars($seance['annee'] ?? '') ?></td>
                         <?php elseif ($periode == 'semaine'): ?>
-                            <th>Date</th>
+                            <td><?= htmlspecialchars($seance['date_seance'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($seance['annee'] ?? '') ?></td>
                         <?php endif; ?>
-                        <th>Nom de l'Arme</th>
-                        <th>Prix de l'Arme</th>
-                        <th>Cartouches Réglementaire Tirées</th>
-                        <th>Cartouches Achetées Tirées</th>
-                        <th>Prix Total Cartouches Achetées (€)</th>
-                        <th>Prix de Réparation</th>
-                        <th>Total cartouches tirées</th>
-                        <th>Total des Prix (€)</th>
+                        <td><?= htmlspecialchars(($seance['marque'] ?? '') . ' ' . ($seance['model'] ?? '')) ?></td>
+                        <td><?= number_format($seance['prix_arme'] ?? 0, 2) ?> €</td>
+                        <td><?= htmlspecialchars($seance['cartouches_reglementaire'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($seance['cartouches_achetees'] ?? 0) ?></td>
+                        <td><?= number_format($seance['prix_reparation'] ?? 0, 2) ?> €</td>
+                        <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
+                        <td><?= number_format($totalDesPrix, 2) ?> €</td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    foreach ($seances as $seance):
-                        $periodName = ($periode == 'mois') ? getMonthName($seance['mois']) : ($periode == 'annee' ? $seance['annee'] : $seance['date_seance']);
-                        $totalCartouchesTirees = $seance['cartouches_reglementaire'] + $seance['cartouches_achetees'];
-                        $totalDesPrix = ($seance['prix_arme'] ?? 0) + ($seance['prix_total_cartouches_achetees'] ?? 0) + ($seance['prix_reparation'] ?? 0);
-                    ?>
-                        <tr>
-                            <?php if ($periode == 'mois'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
-                                <td><?= htmlspecialchars($seance['annee']) ?></td>
-                            <?php elseif ($periode == 'annee'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
-                            <?php elseif ($periode == 'semaine'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
-                            <?php endif; ?>
-                            <td><?= htmlspecialchars($seance['marque'] . ' ' . $seance['model']) ?></td>
-                            <td><?= number_format($seance['prix_arme'] ?? 0, 2) ?> €</td>
-                            <td><?= htmlspecialchars($seance['cartouches_reglementaire']) ?></td>
-                            <td><?= htmlspecialchars($seance['cartouches_achetees']) ?></td>
-                            <td><?= number_format($seance['prix_total_cartouches_achetees'] ?? 0, 2) ?> €</td>
-                            <td><?= number_format($seance['prix_reparation'] ?? 0, 2) ?> €</td>
-                            <td><?= htmlspecialchars($totalCartouchesTirees) ?></td>
-                            <td><?= number_format($totalDesPrix, 2) ?> €</td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                <?php endforeach; ?>
+                <tr>
+                    <td colspan="<?php echo ($periode == 'semaine') ? '9' : '8'; ?>"><strong>Total des tirs sur l'année</strong></td>
+                    <td><strong><?= htmlspecialchars($totalTirsAnnee) ?></strong></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <?php elseif (isset($seances) && $categorie == 'invites'): ?>
         <h3>Résultats pour les Invités</h3>
         <div id="stat-table" class="table-responsive">
@@ -253,16 +279,16 @@ function getMonthName($monthNumber) {
                     ?>
                         <tr>
                             <?php if ($periode == 'mois'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
-                                <td><?= htmlspecialchars($seance['annee']) ?></td>
+                                <td><?= htmlspecialchars($periodName ?? '') ?></td>
+                                <td><?= htmlspecialchars($seance['annee'] ?? '') ?></td>
                             <?php elseif ($periode == 'annee'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
+                                <td><?= htmlspecialchars($periodName ?? '') ?></td>
                             <?php elseif ($periode == 'semaine'): ?>
-                                <td><?= htmlspecialchars($periodName) ?></td>
+                                <td><?= htmlspecialchars($periodName ?? '') ?></td>
                             <?php endif; ?>
-                            <td><?= htmlspecialchars($seance['nom_stand']) ?></td>
-                            <td><?= htmlspecialchars($seance['nombre_invites']) ?></td>
-                            <td><?= htmlspecialchars($seance['nombre_seances']) ?></td>
+                            <td><?= htmlspecialchars($seance['nom_stand'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($seance['nombre_invites'] ?? 0) ?></td>
+                            <td><?= htmlspecialchars($seance['nombre_seances'] ?? 0) ?></td>
                             <td><?= number_format($seance['prix_total_invite'] ?? 0, 2) ?> €</td>
                         </tr>
                     <?php endforeach; ?>
@@ -287,14 +313,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var periodeSelect = document.getElementById('periode');
     var dateDebutGroup = document.getElementById('date_debut_group');
     var dateFinGroup = document.getElementById('date_fin_group');
+    var anneeGroup = document.getElementById('annee_group');
 
     function toggleDateFields() {
         if (periodeSelect.value === 'semaine') {
             dateDebutGroup.style.display = 'block';
             dateFinGroup.style.display = 'block';
+            anneeGroup.style.display = 'none';
+        } else if (periodeSelect.value === 'annee') {
+            dateDebutGroup.style.display = 'none';
+            dateFinGroup.style.display = 'none';
+            anneeGroup.style.display = 'block';
         } else {
             dateDebutGroup.style.display = 'none';
             dateFinGroup.style.display = 'none';
+            anneeGroup.style.display = 'none';
         }
     }
 
@@ -309,6 +342,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!dateDebut || !dateFin) {
                 event.preventDefault();
                 alert('Veuillez saisir une date de début et une date de fin.');
+            }
+        } else if (periodeSelect.value === 'annee') {
+            var annee = document.getElementById('annee').value;
+            if (!annee) {
+                event.preventDefault();
+                alert('Veuillez saisir une année.');
             }
         }
     });
@@ -325,7 +364,7 @@ document.getElementById('generate-pdf').addEventListener('click', function() {
     const table = document.getElementById('statistiquesTable');
     const headers = [];
     const data = [];
-    const excludedColumns = []; // Add indexes of columns you want to exclude
+    const excludedColumns = [5]; // Index de la colonne à exclure (basé sur zéro)
 
     // Get headers
     table.querySelectorAll('thead th').forEach((th, index) => {

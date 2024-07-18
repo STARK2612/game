@@ -3,6 +3,9 @@ require_once '../backend/session.php';
 require_once '../backend/config.php';
 require_once '../backend/csrf.php';
 
+// Vérifier l'inactivité
+check_inactivity();
+
 // Vérifier si une session est déjà active
 if (session_status() == PHP_SESSION_NONE) {
     session_start();

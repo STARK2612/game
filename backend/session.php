@@ -6,7 +6,7 @@ function is_logged_in() {
 }
 
 function check_inactivity() {
-    $timeout = 500;
+    $timeout = 20; // 20 seconds timeout
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
         session_unset();
         session_destroy();
@@ -17,7 +17,7 @@ function check_inactivity() {
 }
 
 // Charger les paramètres de configuration des couleurs
-$config_file = __DIR__ . '../backend/config.json';
+$config_file = __DIR__ . '/../backend/config.json'; // Correction du chemin du fichier
 if (file_exists($config_file)) {
     $config = json_decode(file_get_contents($config_file), true);
     if (isset($config['nav_item_color'])) {
