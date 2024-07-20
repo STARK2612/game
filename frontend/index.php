@@ -89,6 +89,32 @@ if (file_exists($background_color_file)) {
         body {
             background-color: <?= htmlspecialchars($background_color) ?>;
         }
+
+        #loading-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-color: <?= htmlspecialchars($background_color) ?>;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .login-container {
             max-width: 400px;
             margin: 50px auto;
@@ -97,6 +123,7 @@ if (file_exists($background_color_file)) {
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
         }
+
         .login-container h2 {
             text-align: center;
             margin-bottom: 20px;
@@ -104,7 +131,10 @@ if (file_exists($background_color_file)) {
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+    <div class="container" style="display: none;">
         <div class="login-container">
             <form method="post" action="index.php">
                 <h2>Connexion</h2>
@@ -124,5 +154,15 @@ if (file_exists($background_color_file)) {
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var loadingScreen = document.getElementById('loading-screen');
+            var content = document.querySelector('.container');
+            
+            loadingScreen.style.display = 'none';
+            content.style.display = 'block';
+        });
+    </script>
 </body>
 </html>
