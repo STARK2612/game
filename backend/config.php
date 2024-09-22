@@ -3,9 +3,9 @@ require_once 'session.php';
 require_once 'csrf.php';
 
 // Configuration de la base de données
-$servername = "mysql-gestionnaireame.alwaysdata.net";
-$username = "367587";
-$password = "Aub1w@n3Ken0b1Master";
+$servername = "localhost";
+$username = "root";
+$password = "";
 $dbname = "gestionnaireame_game";
 
 try {
